@@ -19,13 +19,12 @@
           v-for="device in phoneList" 
           :key="device.id" 
           class="device-card"
+          @mouseenter="showDeviceTooltip(device, $event)"
+          @mouseleave="hideDeviceTooltip"
         >
           <div class="device-info">
             <div class="device-content">
-              <div class="device-image"
-                   @mouseenter="showDeviceTooltip(device, $event)"
-                   @mouseleave="hideDeviceTooltip"
-              >
+              <div class="device-image">
                 <img :src="device.deviceIconUrl" :alt="device.name" v-if="device.deviceIconUrl">
                 <div class="placeholder-image" v-else>📱</div>
               </div>
@@ -60,7 +59,7 @@
           </div>
           
           <!-- 悬浮展示-->
-          <div v-if="tooltipVisible" class="device-tooltip" :style="tooltipStyle">
+          <div v-if="tooltipVisible && tooltipDevice && tooltipDevice.id === device.id" class="device-tooltip" :style="tooltipStyle">
             <div class="tooltip-header">
               <h3>{{ tooltipDevice.name }}</h3>
             </div>
@@ -116,7 +115,7 @@ export default {
       phoneList: [], // 直接使用列表数据
       selectedPhone: null, // 当前选择的手机
       selectedPhoneDetail: null, // 添加这一行
-      tooltipVisible: false,  // 控制提示框显示
+      tooltipDeviceId: null,  // 当前显示悬浮框的设备ID
       tooltipDevice: null,    // 当前提示的设备
       tooltipStyle: {         // 提示框位置样式
         top: '0px',
@@ -124,6 +123,12 @@ export default {
       },
       syncLoading: false // 同步按钮loading状态
     };    
+  },
+  computed: {
+    // 计算属性：根据当前设备ID判断是否显示悬浮框
+    tooltipVisible() {
+      return this.tooltipDeviceId !== null;
+    }
   },
   methods: {
     // 获取手机数据
@@ -159,12 +164,15 @@ export default {
     },
     // 显示设备详情提示框
     showDeviceTooltip(device, event) {
+      this.tooltipDeviceId = device.id;
       this.tooltipDevice = device;
-      this.tooltipVisible = true;
       
       // 计算提示框位置
       this.$nextTick(() => {
+        // 获取卡片元素的位置信息
         const cardRect = event.currentTarget.getBoundingClientRect();
+        console.log('卡片位置:', cardRect);
+        
         // 调整位置，让悬浮框更靠近卡片
         // 左侧距离卡片右侧 5px，顶部与卡片顶部对齐
         this.tooltipStyle = {
@@ -177,10 +185,13 @@ export default {
         if (tooltipElement) {
           const tooltipRect = tooltipElement.getBoundingClientRect();
           const screenWidth = window.innerWidth;
+          console.log('悬浮框位置:', tooltipRect);
+          console.log('屏幕宽度:', screenWidth);
           
           // 如果超出屏幕右侧，调整到卡片左侧
           if (tooltipRect.right > screenWidth) {
             this.tooltipStyle.left = (cardRect.left - tooltipRect.width - 5) + 'px';
+            console.log('调整后位置:', this.tooltipStyle);
           }
         }
       });
@@ -188,7 +199,8 @@ export default {
     
     // 隐藏提示框
     hideDeviceTooltip() {
-      this.tooltipVisible = false;
+      this.tooltipDeviceId = null;
+      this.tooltipDevice = null;
     },
 
     // 同步设备状态
