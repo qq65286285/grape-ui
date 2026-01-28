@@ -313,18 +313,17 @@ export default {
 
       this.uploadLoading = true;
       try {
-        // 将文件转换为Base64字符串
-        const fileBase64 = await this.fileToBase64(this.selectedFile);
+        // 创建 FormData 对象
+        const formData = new FormData();
+        formData.append('file', this.selectedFile);
+        formData.append('fileName', this.selectedFile.name);
+        formData.append('fileSize', this.selectedFile.size.toString());
+        formData.append('fileType', this.selectedFile.type);
 
-        // 调用上传接口，使用Base64字符串作为请求体
-        const response = await this.$http.post('/api/fileInfo/upload', {
-          file: fileBase64,
-          fileName: this.selectedFile.name,
-          fileSize: this.selectedFile.size,
-          fileType: this.selectedFile.type
-        }, {
+        // 调用上传接口，使用 FormData 格式
+        const response = await this.$http.post('/api/fileInfo/upload', formData, {
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'multipart/form-data'
           }
         });
 
