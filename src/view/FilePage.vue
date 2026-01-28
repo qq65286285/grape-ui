@@ -327,7 +327,7 @@ export default {
           }
         });
 
-        if (response.data.code === 200) {
+        if (response.data.code === 0) {
           this.$message.success('文件上传成功');
           this.uploadDialogVisible = false;
           this.fetchCaseList(); // 重新加载文件列表
