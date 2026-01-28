@@ -57,46 +57,46 @@
             <!-- 修改立即使用按钮，添加点击事件 -->
             <el-button type="primary" size="small" @click="openDevice(device)">立即使用</el-button>
           </div>
-          
-          <!-- 悬浮展示-->
-          <div v-if="tooltipVisible && tooltipDevice && tooltipDevice.id === device.id" class="device-tooltip" :style="tooltipStyle">
-            <div class="tooltip-header">
-              <h3>{{ tooltipDevice.name }}</h3>
-            </div>
-            <div class="tooltip-content">
-              <div class="tooltip-row">
-                <span class="label">wifi Mac地址:</span>
-                <span>{{ tooltipDevice.wifiAddress }}</span>
-              </div>
-              <div class="tooltip-row">
-                <span class="label">设备序列号:</span>
-                <span>{{ tooltipDevice.devicesSerialNumber }}</span>
-              </div>
-              <div class="tooltip-row">
-                <span class="label">设备制造商:</span>
-                <span>{{ tooltipDevice.devicesManufacturer }}</span>
-              </div>
-              <div class="tooltip-row">
-                <span class="label">品牌:</span>
-                <span>{{ tooltipDevice.devicesBrand }}</span>
-              </div>
-              <div class="tooltip-row">
-                <span class="label">安卓系统版本:</span>
-                <span>{{ tooltipDevice.androidVersion }}</span>
-              </div>
-              <div class="tooltip-row">
-                <span class="label">CPU详细信息:</span>
-                <span>{{ tooltipDevice.cpuInfo }}</span>
-              </div>
-              <div class="tooltip-row">
-                <span class="label">存储分析详情:</span>
-                <span>{{ tooltipDevice.storageAnalysis }}</span>
-              </div>
-              <div class="tooltip-row">
-                <span class="label">分辨率:</span>
-                <span>{{ tooltipDevice.resolution }}</span>
-              </div>
-            </div>
+        </div>
+      </div>
+      
+      <!-- 悬浮展示-->
+      <div v-if="tooltipVisible && tooltipDevice" class="device-tooltip" :style="tooltipStyle">
+        <div class="tooltip-header">
+          <h3>{{ tooltipDevice.name }}</h3>
+        </div>
+        <div class="tooltip-content">
+          <div class="tooltip-row">
+            <span class="label">wifi Mac地址:</span>
+            <span>{{ tooltipDevice.wifiAddress }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="label">设备序列号:</span>
+            <span>{{ tooltipDevice.devicesSerialNumber }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="label">设备制造商:</span>
+            <span>{{ tooltipDevice.devicesManufacturer }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="label">品牌:</span>
+            <span>{{ tooltipDevice.devicesBrand }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="label">安卓系统版本:</span>
+            <span>{{ tooltipDevice.androidVersion }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="label">CPU详细信息:</span>
+            <span>{{ tooltipDevice.cpuInfo }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="label">存储分析详情:</span>
+            <span>{{ tooltipDevice.storageAnalysis }}</span>
+          </div>
+          <div class="tooltip-row">
+            <span class="label">分辨率:</span>
+            <span>{{ tooltipDevice.resolution }}</span>
           </div>
         </div>
       </div>
