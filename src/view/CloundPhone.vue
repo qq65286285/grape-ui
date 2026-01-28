@@ -33,14 +33,14 @@
                 <div class="device-name">{{ device.name }}</div>
                 <div class="device-specs">
                   <div>品牌: {{ device.devicesBrand }}</div>
-                  <div>型号: {{ device.androidVersion }}</div>
+                  <div>安卓版本: {{ device.androidVersion }}</div>
                   <div>设备制造商: {{ device.devicesManufacturer }}</div>
                   <div>分辨率: {{ device.resolution }}</div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="device-sn">编号: {{ device.sn }}</div>
+          <div class="device-sn">编号: {{ device.devicesSerialNumber }}</div>
           <div class="device-footer">
             <div class="device-status" :class="{ 'online': device.isOnline, 'offline': !device.isOnline }">
               <!-- 在线状态SVG图标 -->
