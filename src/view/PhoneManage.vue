@@ -165,7 +165,7 @@ export default {
     // 同步设备
     async syncDevices() {
       try {
-        const response = await this.$http.post('/api/deviceInfo/sync');
+        const response = await this.$http.post('/api/deviceInfo/syncDeviceStatus');
         if (response.data.code === 0) {
           this.$message.success('设备同步成功');
           this.fetchPhoneList(); // 更新列表
