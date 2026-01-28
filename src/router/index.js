@@ -1,0 +1,89 @@
+// src/router/index.js
+import { createRouter, createWebHistory } from 'vue-router';
+import CaseList from '@/view/CaseList.vue';
+import ExcutionCase from '@/view/ExcutionCase.vue';
+import FilePage from '@/view/FilePage.vue';
+import PhoneManage from '@/view/PhoneManage.vue';
+import CloundPhone from '@/view/CloundPhone.vue';
+import LoginPage from '@/view/LoginPage.vue';
+
+const routes = [
+  {
+    path: '/LoginPage',
+    name: 'LoginPage',
+    meta: { hideNavbar: true },
+    component: LoginPage,
+  },
+  {
+    path: '/case-list',
+    name: 'CaseList',
+    component: CaseList,
+    meta: { requiresAuth: true }, // 添加需要认证的标识
+  },
+  {
+    path: '/ExcutionCase',
+    name: 'ExcutionCase',
+    component: ExcutionCase,
+    meta: { requiresAuth: true }, // 添加需要认证的标识
+  },
+  {
+    path: '/FilePage',
+    name: 'FilePage',
+    component: FilePage,
+    meta: { requiresAuth: true }, // 添加需要认证的标识
+  },
+  {
+    path: '/PhoneManage',
+    name: 'PhoneManage',
+    component: PhoneManage,
+    meta: { requiresAuth: true }, // 添加需要认证的标识
+  },
+  {
+    path: '/CloundPhone',
+    name: 'CloundPhone',
+    component: CloundPhone,
+    meta: { requiresAuth: true }, // 添加需要认证的标识
+  },
+  // 添加默认路径重定向到登录页
+  {
+    path: '/',
+    redirect: '/LoginPage'
+  }
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+});
+
+// 添加导航守卫
+router.beforeEach((to, from, next) => {
+  // 检查是否存在 token
+  const token = localStorage.getItem('token');
+  
+  // 检查目标路由是否是登录页
+  if (to.path === '/LoginPage') {
+    // 如果已登录，重定向到云真机页面
+    if (token) {
+      next('/CloundPhone');
+    } else {
+      // 未登录，允许访问登录页
+      next();
+    }
+  } 
+  // 检查目标路由是否需要认证
+  else if (to.meta.requiresAuth) {
+    if (token) {
+      // 有 token，允许访问
+      next();
+    } else {
+      // 无 token，重定向到登录页
+      next('/LoginPage');
+    }
+  } else {
+    // 不需要认证的路由，直接访问
+    next();
+  }
+});
+
+export default router;

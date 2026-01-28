@@ -1,0 +1,299 @@
+<template>
+  <div>
+    <!-- 标题行 -->
+    <div class="header">
+      <h1>用例列表</h1>
+      <div>
+        <el-button type="primary" @click="openDialog">新增测试用例</el-button>
+        <el-button type="success" @click="refreshList">刷新</el-button>
+      </div>
+    </div>
+
+    <!-- 表格 -->
+    <el-table :data="caseList.records" style="width: 100%">
+      <el-table-column prop="caseNumber" label="用例编号" width="180" />
+      <el-table-column prop="title" label="标题" width="180" />
+      <el-table-column prop="description" label="描述" />
+      <el-table-column prop="priority" label="优先级" />
+      <el-table-column prop="status" label="状态" />
+      <!-- 操作列 -->
+      <el-table-column label="操作" width="120">
+        <template #default="scope">
+          <el-button type="text" @click="editCase(scope.row)">编辑</el-button>
+          <el-button type="text" @click="deleteCase(scope.row.id)">删除</el-button>
+          <el-button type="text" @click="showHistory(scope.row.id)">历史版本</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 分页 -->
+    <el-pagination
+      background
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="caseList.totalRow"
+      :page-size="pagination.pageSize"
+      :current-page="pagination.pageNumber"
+      @size-change="handleSizeChange"
+      @current-change="handlePageChange"
+    />
+
+    <!-- 新增/编辑对话框 -->
+    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="30%">
+      <!-- 表单 -->
+      <el-form :model="form" label-width="120px">
+        <el-form-item label="用例编号">
+          <el-input v-model="form.caseNumber" />
+        </el-form-item>
+        <el-form-item label="标题">
+          <el-input v-model="form.title" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="form.description" type="textarea" />
+        </el-form-item>
+        <el-form-item label="优先级">
+          <el-input-number v-model="form.priority" :min="0" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-input-number v-model="form.status" :min="0" />
+        </el-form-item>
+        <el-form-item label="预期结果">
+          <el-input v-model="form.expectedResult" type="textarea" />
+        </el-form-item>
+        <el-form-item label="模块">
+          <el-input v-model="form.module" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="form.remark" type="textarea" />
+        </el-form-item>
+      </el-form>
+
+      <!-- 对话框底部按钮 -->
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveCase">保存</el-button>
+      </template>
+    </el-dialog>
+
+
+    <!-- 历史版本对话框 -->
+    <el-dialog title="历史版本" v-model="historyDialogVisible" width="50%">
+      <!-- 历史版本数据 -->
+      <el-table :data="historyList" style="width: 100%">
+        <el-table-column prop="version" label="版本号" width="120" />
+        <el-table-column prop="createdAt" label="创建时间" width="180" />
+        <el-table-column prop="updatedBy" label="更新人" width="120" />
+        <el-table-column prop="description" label="描述" />
+      </el-table>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      caseList: {
+        records: [], // 当前页的数据
+        pageNumber: 0, // 当前页码
+        pageSize: 0, // 每页条数
+        totalPage: 0, // 总页数
+        totalRow: 0, // 总条数
+      },
+      pagination: {
+        pageNumber: 1, // 当前页码（默认第一页）
+        pageSize: 20, // 每页条数（默认20条）
+      },
+      dialogVisible: false, // 控制对话框显示
+      historyDialogVisible: false, // 控制历史版本对话框显示
+      dialogTitle: "新增测试用例", // 对话框标题
+      form: {
+        id: 0,
+        caseNumber: "",
+        title: "",
+        description: "",
+        priority: 0,
+        status: 0,
+        version: 0,
+        environmentId: 0,
+        expectedResult: "",
+        module: "",
+        remark: "",
+        createdBy: 0,
+        createdAt: 0,
+        updatedAt: 0,
+        updatedBy: "string",
+      }, // 表单数据
+      isEditMode: false, // 是否为编辑模式
+      historyList: [], // 历史版本数据
+    };
+  },
+  methods: {
+    // 打开新增对话框
+    openDialog() {
+      this.dialogTitle = "新增测试用例";
+      this.isEditMode = false;
+      this.resetForm();
+      this.dialogVisible = true;
+    },
+
+    // 打开编辑对话框
+    editCase(row) {
+      this.dialogTitle = "编辑测试用例";
+      this.isEditMode = true;
+      this.form = { ...row }; // 将当前行的数据填充到表单中
+      this.dialogVisible = true;
+    },
+
+    // 保存用例
+    async saveCase() {
+      try {
+        let response;
+        if (this.isEditMode) {
+          // 编辑模式，调用更新接口
+          response = await this.$http.put("/api/cases/update", this.form);
+        } else {
+          // 新增模式，调用保存接口
+          response = await this.$http.post("/api/cases/save", this.form);
+        }
+
+        if (response.data.code === 0) {
+          this.$message.success("保存成功");
+          this.dialogVisible = false; // 关闭对话框
+          this.fetchCaseList(); // 重新加载用例列表
+        } else {
+          this.$message.error("保存失败：" + response.data.message);
+        }
+      } catch (error) {
+        this.$message.error("请求失败：" + error.message);
+      }
+    },
+
+
+    // 显示历史版本
+    async showHistory(caseId) {
+      try {
+        const response = await this.$http.get(`/api/caseVersions/listByCaseId`, {
+          params: { caseId },
+        });
+        if (response.data.code === 0) {
+          this.historyList = response.data.data; // 更新历史版本数据
+          this.historyDialogVisible = true; // 打开历史版本对话框
+        } else {
+          this.$message.error("获取历史版本失败：" + response.data.message);
+        }
+      } catch (error) {
+        this.$message.error("请求失败：" + error.message);
+      }
+    },
+
+
+    // 删除用例
+    async deleteCase(id) {
+      try {
+        const response = await this.$http.delete(`/api/cases/remove/${id}`);
+        if (response.data.code === 0) {
+          this.$message.success("删除成功");
+          this.fetchCaseList(); // 重新加载用例列表
+        } else {
+          this.$message.error("删除失败：" + response.data.message);
+        }
+      } catch (error) {
+        this.$message.error("请求失败：" + error.message);
+      }
+    },
+
+    // 获取用例列表
+    async fetchCaseList() {
+      try {
+        const response = await this.$http.get("/api/cases/page", {
+          params: {
+            pageNumber: this.pagination.pageNumber,
+            pageSize: this.pagination.pageSize,
+          },
+        });
+        if (response.data.code === 0) {
+          const { list, pageInfo } = response.data.data;
+
+          this.caseList.records = list; // 当前页的数据
+          this.caseList.pageNumber = pageInfo.current; // 当前页码
+          this.caseList.pageSize = pageInfo.size; // 每页条数
+          this.caseList.totalPage = Math.ceil(pageInfo.total / pageInfo.size); // 总页数
+          this.caseList.totalRow = pageInfo.total; // 总条数
+        }
+      } catch (error) {
+        this.$message.error("加载失败：" + error.message);
+      }
+    },
+
+    // 刷新列表
+    refreshList() {
+      this.fetchCaseList();
+      this.$message.success("刷新成功");
+    },
+
+    // 重置表单
+    resetForm() {
+      this.form = {
+        id: 0,
+        caseNumber: "",
+        title: "",
+        description: "",
+        priority: 0,
+        status: 0,
+        version: 0,
+        environmentId: 0,
+        expectedResult: "",
+        module: "",
+        remark: "",
+        createdBy: 0,
+        createdAt: 0,
+        updatedAt: 0,
+        updatedBy: "string",
+      };
+    },
+
+    // 处理每页条数变化
+    handleSizeChange(pageSize) {
+      this.pagination.pageSize = pageSize;
+      this.fetchCaseList(); // 重新加载数据
+    },
+
+    // 处理页码变化
+    handlePageChange(pageNumber) {
+      this.pagination.pageNumber = pageNumber;
+      this.fetchCaseList(); // 重新加载数据
+    },
+  },
+  mounted() {
+    this.fetchCaseList(); // 组件加载时获取用例列表
+  },
+};
+</script>
+
+<style scoped>
+/* 标题行样式 */
+.header {
+  display: flex; /* 使用 Flex 布局 */
+  justify-content: space-between; /* 标题靠左，按钮靠右 */
+  align-items: center; /* 垂直居中 */
+  margin-bottom: 20px; /* 与表格的间距 */
+}
+
+h1 {
+  text-align: center; /* 标题居中 */
+  margin: 0; /* 去除默认的 margin */
+  flex: 1; /* 让标题占据剩余空间 */
+}
+
+/* 按钮组样式 */
+.header > div {
+  display: flex;
+  gap: 10px; /* 按钮之间的间距 */
+}
+
+/* 分页样式 */
+.el-pagination {
+  margin-top: 20px;
+  text-align: right;
+}
+</style>
