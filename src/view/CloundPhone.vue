@@ -170,6 +170,7 @@ export default {
       // 计算悬浮框位置
       const cardRect = event.currentTarget.getBoundingClientRect();
       // 让悬浮框紧贴卡片右侧
+      // fixed 定位是相对于视口的，不需要考虑滚动
       this.tooltipStyle = {
         top: cardRect.top + 'px',
         left: (cardRect.left + cardRect.width + 2) + 'px'
