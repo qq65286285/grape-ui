@@ -165,10 +165,24 @@ export default {
       // 计算提示框位置
       this.$nextTick(() => {
         const cardRect = event.currentTarget.getBoundingClientRect();
+        // 调整位置，让悬浮框更靠近卡片
+        // 左侧距离卡片右侧 5px，顶部与卡片顶部对齐
         this.tooltipStyle = {
           top: cardRect.top + 'px',
-          left: (cardRect.left + cardRect.width + 10) + 'px'
+          left: (cardRect.left + cardRect.width + 5) + 'px'
         };
+        
+        // 检查是否超出屏幕右侧边界
+        const tooltipElement = document.querySelector('.device-tooltip');
+        if (tooltipElement) {
+          const tooltipRect = tooltipElement.getBoundingClientRect();
+          const screenWidth = window.innerWidth;
+          
+          // 如果超出屏幕右侧，调整到卡片左侧
+          if (tooltipRect.right > screenWidth) {
+            this.tooltipStyle.left = (cardRect.left - tooltipRect.width - 5) + 'px';
+          }
+        }
       });
     },
     
