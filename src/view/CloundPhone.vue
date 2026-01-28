@@ -210,8 +210,29 @@ export default {
     
     console.log('复制 adb 命令:', adbCommand);
     
-    // 复制到剪贴板
-    await navigator.clipboard.writeText(adbCommand);
+    // 复制到剪贴板（兼容不同浏览器）
+    if (navigator.clipboard && window.isSecureContext) {
+      // 使用现代 Clipboard API（需要 HTTPS）
+      await navigator.clipboard.writeText(adbCommand);
+    } else {
+      // 使用传统方法（兼容 HTTP 和旧浏览器）
+      const textArea = document.createElement('textarea');
+      textArea.value = adbCommand;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('传统复制方法失败:', err);
+        throw new Error('无法复制到剪贴板');
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
     
     // 显示成功提示
     this.$message.success(`已复制 adb 命令到剪贴板:\n${adbCommand}`);
