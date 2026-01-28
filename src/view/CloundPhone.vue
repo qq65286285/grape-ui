@@ -387,7 +387,7 @@ export default {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 16px;
-  z-index: 9999;
+  z-index: 10000;
   min-width: 240px;
   max-width: 300px;
   transition: all 0.3s ease;
