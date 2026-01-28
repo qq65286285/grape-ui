@@ -204,20 +204,20 @@ export default {
 
     async openDevice(device) {
   try {
-    // 可以在这里使用 device 参数中的信息，例如：
-    console.log('正在启动设备:', device.name);
-    // 调用后端 API 来处理设备连接（前端无法直接执行 adb 命令）
-    const response = await this.$http.post('/api/device/open', {
-      deviceId: device.id,
-      deviceName: device.name
-    });
-    if (response.data.code === 0) {
-      this.$message.success(`设备 ${device.name} 启动成功`);
-    } else {
-      this.$message.error('设备启动失败：' + response.data.msg);
-    }
+    // 构建 adb connect 命令
+    const ip = device.wifiAddress;
+    const adbCommand = `adb connect ${ip}:5555`;
+    
+    console.log('复制 adb 命令:', adbCommand);
+    
+    // 复制到剪贴板
+    await navigator.clipboard.writeText(adbCommand);
+    
+    // 显示成功提示
+    this.$message.success(`已复制 adb 命令到剪贴板:\n${adbCommand}`);
   } catch (error) {
-    this.$message.error('设备启动失败：' + error.message);
+    console.error('复制失败:', error);
+    this.$message.error('复制命令失败：' + error.message);
   }
 }
   },
