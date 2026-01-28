@@ -167,34 +167,8 @@ export default {
       this.tooltipDeviceId = device.id;
       this.tooltipDevice = device;
       
-      // 计算提示框位置
-      this.$nextTick(() => {
-        // 获取卡片元素的位置信息
-        const cardRect = event.currentTarget.getBoundingClientRect();
-        console.log('卡片位置:', cardRect);
-        
-        // 调整位置，让悬浮框更靠近卡片
-        // 左侧距离卡片右侧 5px，顶部与卡片顶部对齐
-        this.tooltipStyle = {
-          top: cardRect.top + 'px',
-          left: (cardRect.left + cardRect.width + 5) + 'px'
-        };
-        
-        // 检查是否超出屏幕右侧边界
-        const tooltipElement = document.querySelector('.device-tooltip');
-        if (tooltipElement) {
-          const tooltipRect = tooltipElement.getBoundingClientRect();
-          const screenWidth = window.innerWidth;
-          console.log('悬浮框位置:', tooltipRect);
-          console.log('屏幕宽度:', screenWidth);
-          
-          // 如果超出屏幕右侧，调整到卡片左侧
-          if (tooltipRect.right > screenWidth) {
-            this.tooltipStyle.left = (cardRect.left - tooltipRect.width - 5) + 'px';
-            console.log('调整后位置:', this.tooltipStyle);
-          }
-        }
-      });
+      // 清空位置样式，使用 CSS 中定义的固定位置
+      this.tooltipStyle = {};
     },
     
     // 隐藏提示框
@@ -408,7 +382,7 @@ export default {
 
 /* 悬浮提示框 */
 .device-tooltip {
-  position: fixed;
+  position: absolute;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -417,6 +391,8 @@ export default {
   min-width: 240px;
   max-width: 300px;
   transition: all 0.3s ease;
+  top: 0;
+  left: calc(100% + 2px);
 }
 
 .tooltip-header {
