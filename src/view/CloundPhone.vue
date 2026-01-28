@@ -163,7 +163,7 @@ export default {
       }
     },
     // 显示设备详情提示框
-    showDeviceTooltip(device, event) {
+    showDeviceTooltip(device) {
       this.tooltipDeviceId = device.id;
       this.tooltipDevice = device;
       
