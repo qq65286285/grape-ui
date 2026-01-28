@@ -163,12 +163,17 @@ export default {
       }
     },
     // 显示设备详情提示框
-    showDeviceTooltip(device) {
+    showDeviceTooltip(device, event) {
       this.tooltipDeviceId = device.id;
       this.tooltipDevice = device;
       
-      // 清空位置样式，使用 CSS 中定义的固定位置
-      this.tooltipStyle = {};
+      // 计算悬浮框位置
+      const cardRect = event.currentTarget.getBoundingClientRect();
+      // 让悬浮框紧贴卡片右侧
+      this.tooltipStyle = {
+        top: cardRect.top + 'px',
+        left: (cardRect.left + cardRect.width + 2) + 'px'
+      };
     },
     
     // 隐藏提示框
@@ -382,7 +387,7 @@ export default {
 
 /* 悬浮提示框 */
 .device-tooltip {
-  position: absolute;
+  position: fixed;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -391,8 +396,6 @@ export default {
   min-width: 240px;
   max-width: 300px;
   transition: all 0.3s ease;
-  top: 0;
-  left: calc(100% + 2px);
 }
 
 .tooltip-header {
