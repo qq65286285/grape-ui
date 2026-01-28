@@ -12,5 +12,3 @@ app.use(router).mount('#app');
 
 // 将配置好的 axios 实例注册为全局属性
 app.config.globalProperties.$http = service;
-
-export default service

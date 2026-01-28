@@ -3,14 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "serve": "vue-cli-service serve --mode test",
+    "serve:test": "vue-cli-service serve --mode test",
+    "serve:prod": "vue-cli-service serve --mode prod",
+    "build": "vue-cli-service build --mode test",
+    "build:test": "vue-cli-service build --mode test",
+    "build:prod": "vue-cli-service build --mode prod",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "axios": "^1.7.9",
     "core-js": "^3.8.3",
-    "element-plus": "^2.9.4",
+    "element-plus": "^2.3.12",
     "qrcode": "^1.5.4",
     "vue": "^3.2.13",
     "vue-router": "^4.5.0",

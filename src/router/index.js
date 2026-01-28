@@ -1,5 +1,5 @@
 // src/router/index.js
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 import CaseList from '@/view/CaseList.vue';
 import ExcutionCase from '@/view/ExcutionCase.vue';
 import FilePage from '@/view/FilePage.vue';
@@ -51,10 +51,17 @@ const routes = [
   }
 ];
 
+// 方案一：使用hash模式（简单，不需要服务器配置）
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
 });
+
+// 方案二：保持history模式（需要服务器配置支持）
+// const router = createRouter({
+//   history: createWebHistory(),
+//   routes,
+// });
 
 // 添加导航守卫
 router.beforeEach((to, from, next) => {

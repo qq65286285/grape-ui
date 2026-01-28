@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // 创建 axios 实例
 const service = axios.create({
-  baseURL: process.env.VUE_APP_API_BASE_URL || 'http://192.168.23.168:18209', // 后端 API 地址
+  baseURL: process.env.VUE_APP_API_BASE_URL || 'http://localhost:8209', // 后端 API 地址
   timeout: 5000, // 请求超时时间
   withCredentials: true, // 允许携带凭证，解决跨域问题
 });
