@@ -59,6 +59,9 @@
           </div>
         </div>
       </div>
+      <div v-else class="no-data">
+        暂无设备数据
+      </div>
       
       <!-- 悬浮展示-->
       <div v-if="tooltipVisible && tooltipDevice" class="device-tooltip" :style="tooltipStyle">
@@ -99,9 +102,6 @@
             <span>{{ tooltipDevice.resolution }}</span>
           </div>
         </div>
-      </div>
-      <div v-else class="no-data">
-        暂无设备数据
       </div>
     </div>
   </div>
