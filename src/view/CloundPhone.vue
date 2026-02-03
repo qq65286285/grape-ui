@@ -54,17 +54,19 @@
               </svg>
               <span>{{ device.isOnline ? '在线' : '离线' }}</span>
             </div>
-            <!-- 添加投屏显示按钮 -->
-            <el-button type="success" size="small" @click="openScreenMirror(device)" :disabled="!device.isOnline">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-              </svg>
-              投屏显示
-            </el-button>
-            <!-- 修改为复制连接按钮 -->
-            <el-button type="primary" size="small" @click="openDevice(device)">复制连接</el-button>
+            <div class="button-group">
+              <!-- 添加投屏显示按钮 -->
+              <el-button type="success" size="small" @click="openScreenMirror(device)" :disabled="!device.isOnline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                投屏显示
+              </el-button>
+              <!-- 修改为复制连接按钮 -->
+              <el-button type="primary" size="small" @click="openDevice(device)">复制连接</el-button>
+            </div>
           </div>
         </div>
       </div>
@@ -402,6 +404,13 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-top: 12px;
+}
+
+/* 按钮组 */
+.button-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
 /* 设备状态 */
