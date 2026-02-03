@@ -84,7 +84,7 @@ export default {
       const nodeName = prompt('请输入子节点名称');
       if (nodeName) {
         try {
-          const response = await this.$http.post('/api/folder/save', { folderName: nodeName, parentId: this.selectedNode.id });
+          const response = await this.$http.post('/folder/save', { folderName: nodeName, parentId: this.selectedNode.id });
           if (response.data.code === 0) {
             this.$message.success('子节点新增成功');
             this.fetchFolderList(); // 更新树形菜单

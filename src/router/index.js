@@ -6,6 +6,7 @@ import FilePage from '@/view/FilePage.vue';
 import PhoneManage from '@/view/PhoneManage.vue';
 import CloundPhone from '@/view/CloundPhone.vue';
 import LoginPage from '@/view/LoginPage.vue';
+import ScreenMirror from '@/view/ScreenMirror.vue';
 
 const routes = [
   {
@@ -43,6 +44,12 @@ const routes = [
     name: 'CloundPhone',
     component: CloundPhone,
     meta: { requiresAuth: true }, // 添加需要认证的标识
+  },
+  {
+    path: '/ScreenMirror/:serial',
+    name: 'ScreenMirror',
+    component: ScreenMirror,
+    meta: { requiresAuth: true, hideNavbar: true }, // 需要认证，隐藏导航栏
   },
   // 添加默认路径重定向到登录页
   {

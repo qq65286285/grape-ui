@@ -4,6 +4,13 @@ module.exports = defineConfig({
   devServer: {
     port: 8309
   },
+  configureWebpack: {
+    resolve: {
+      fallback: {
+        stream: require.resolve('stream-browserify')
+      }
+    }
+  },
   chainWebpack: config => {
     config.module
       .rule('mjs')

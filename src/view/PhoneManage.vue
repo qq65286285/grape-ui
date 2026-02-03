@@ -49,6 +49,23 @@
             <el-descriptions-item label="在线状态">{{ selectedPhoneDetail.isOnline === 1 ? '在线' : '离线' }}</el-descriptions-item>
             <el-descriptions-item label="分辨率">{{ selectedPhoneDetail.resolution }}</el-descriptions-item>
           </el-descriptions>
+
+          <!-- 投屏按钮 -->
+          <div class="screen-mirror-button">
+            <el-button
+              type="success"
+              size="large"
+              @click="openScreenMirror"
+              :disabled="selectedPhoneDetail.isOnline !== 1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              投屏显示
+            </el-button>
+          </div>
           
           <!-- 设备图片移到详情下面 -->
           <div class="phone-images-below">
@@ -312,10 +329,10 @@ export default {
     async handleFileUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
-      
+
       // 保存当前选中的手机ID
       const currentPhoneId = this.selectedPhone.id;
-      
+
       // 创建 FormData 对象
       const formData = new FormData();
       formData.append('file', file);
@@ -323,7 +340,7 @@ export default {
       try {
         // 根据上传类型选择不同的接口
         const apiUrl = this.uploadType === 'brand' ? '/api/deviceInfo/updateBrandImg' : '/api/deviceInfo/updateImg';
-        
+
         // 使用正确的配置上传文件
         const response = await this.$http({
           method: 'post',
@@ -333,12 +350,12 @@ export default {
             'Content-Type': 'multipart/form-data'
           }
         });
-        
+
         if (response.data.code === 0) {
           this.$message.success(this.uploadType === 'brand' ? '品牌图片上传成功' : '设备图片上传成功');
           // 重新获取列表以更新图片
           await this.fetchPhoneList();
-          
+
           // 确保重新选中当前手机
           if (currentPhoneId) {
             const phone = this.phoneList.find(p => p.id === currentPhoneId);
@@ -359,6 +376,25 @@ export default {
         // 清空上传类型
         this.uploadType = null;
       }
+    },
+
+    // 打开投屏页面
+    openScreenMirror() {
+      if (!this.selectedPhone || !this.selectedPhone.devicesSerialNumber) {
+        this.$message.warning('无法获取设备序列号');
+        return;
+      }
+
+      // 跳转到投屏页面，传递设备序列号
+      this.$router.push({
+        name: 'ScreenMirror',
+        params: {
+          serial: this.selectedPhone.devicesSerialNumber
+        },
+        query: {
+          name: this.selectedPhone.name
+        }
+      });
     }
   },
  mounted() {
@@ -526,6 +562,32 @@ export default {
 .phone-info .el-descriptions__content {
   flex: 1;
   color: #303133;
+}
+
+/* 投屏按钮样式 */
+.screen-mirror-button {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e4e7ed;
+  display: flex;
+  justify-content: center;
+}
+
+.screen-mirror-button .el-button {
+  font-size: 16px;
+  padding: 14px 32px;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.screen-mirror-button .el-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(103, 194, 58, 0.3);
+}
+
+.screen-mirror-button .el-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* 图片展示区域样式 */
