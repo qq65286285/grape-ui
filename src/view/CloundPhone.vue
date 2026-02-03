@@ -54,8 +54,17 @@
               </svg>
               <span>{{ device.isOnline ? '在线' : '离线' }}</span>
             </div>
-            <!-- 修改立即使用按钮，添加点击事件 -->
-            <el-button type="primary" size="small" @click="openDevice(device)">立即使用</el-button>
+            <!-- 添加投屏显示按钮 -->
+            <el-button type="success" size="small" @click="openScreenMirror(device)" :disabled="!device.isOnline">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              投屏显示
+            </el-button>
+            <!-- 修改为复制连接按钮 -->
+            <el-button type="primary" size="small" @click="openDevice(device)">复制连接</el-button>
           </div>
         </div>
       </div>
@@ -187,7 +196,7 @@ export default {
     async syncDeviceStatus() {
       this.syncLoading = true;
       try {
-        const response = await this.$http.get('/api/deviceInfo/syncDeviceStatus');
+        const response = await this.$http.post('/api/deviceInfo/syncDeviceStatus');
         if (response.data.code === 0) {
           this.$message.success('设备状态同步成功');
           // 同步成功后重新获取设备列表
@@ -240,7 +249,32 @@ export default {
     console.error('复制失败:', error);
     this.$message.error('复制命令失败：' + error.message);
   }
-}
+},
+
+    // 打开投屏页面
+    openScreenMirror(device) {
+      if (!device || !device.devicesSerialNumber) {
+        this.$message.warning('无法获取设备序列号');
+        return;
+      }
+
+      // 检查设备是否离线
+      if (!device.isOnline) {
+        this.$message.warning('该设备离线，无法进行投屏操作');
+        return;
+      }
+
+      // 跳转到投屏页面，传递设备序列号
+      this.$router.push({
+        name: 'ScreenMirror',
+        params: {
+          serial: device.devicesSerialNumber
+        },
+        query: {
+          name: device.name
+        }
+      });
+    }
   },
   mounted() {
     this.fetchPhoneList(); // 页面加载时获取手机列表数据
