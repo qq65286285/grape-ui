@@ -16,6 +16,11 @@
       <el-table-column prop="description" label="描述" />
       <el-table-column prop="priority" label="优先级" />
       <el-table-column prop="status" label="状态" />
+      <el-table-column label="创建人" width="120">
+        <template #default="scope">
+          {{ scope.row.username || '加载中...' }}
+        </template>
+      </el-table-column>
       <!-- 操作列 -->
       <el-table-column label="操作" width="120">
         <template #default="scope">
@@ -212,6 +217,20 @@ export default {
       }
     },
 
+    // 获取用户信息
+    async getUserInfo(userId) {
+      try {
+        const response = await this.$http.get(`/api/user/getInfo/${userId}`);
+        if (response.data.code === 200) {
+          return response.data.data.username;
+        }
+        return '未知用户';
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+        return '未知用户';
+      }
+    },
+
     // 获取用例列表
     async fetchCaseList() {
       try {
@@ -223,6 +242,15 @@ export default {
         });
         if (response.data.code === 0) {
           const { list, pageInfo } = response.data.data;
+
+          // 为每个用例添加用户名
+          for (let i = 0; i < list.length; i++) {
+            if (list[i].createdBy) {
+              list[i].username = await this.getUserInfo(list[i].createdBy);
+            } else {
+              list[i].username = '未知用户';
+            }
+          }
 
           this.caseList.records = list; // 当前页的数据
           this.caseList.pageNumber = pageInfo.current; // 当前页码
