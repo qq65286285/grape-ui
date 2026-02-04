@@ -2,7 +2,7 @@
   <div >
     <!-- 标题行 -->
     <div class="header">
-      <h1>文件-这样也还没空</h1>
+      <h1>文件管理</h1>
       <div>
         <el-button type="primary" @click="handleUpload">上传文件</el-button>
       </div>
