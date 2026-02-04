@@ -220,9 +220,13 @@ export default {
     // 获取用户信息
     async getUserInfo(userId) {
       try {
+        console.log('获取用户信息，userId:', userId);
         const response = await this.$http.get(`/api/user/getInfo/${userId}`);
-        if (response.data.code === 200) {
+        console.log('用户信息响应:', response.data);
+        if (response.data.code === 200 && response.data.data && response.data.data.username) {
           return response.data.data.username;
+        } else if (response.data.code === 404) {
+          return '用户不存在';
         }
         return '未知用户';
       } catch (error) {
