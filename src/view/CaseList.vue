@@ -224,7 +224,7 @@ export default {
         const response = await this.$http.get(`/api/user/getInfo/${userId}`);
         console.log('用户信息响应:', JSON.stringify(response.data));
         // 检查响应结构
-        if (response.data && response.data.code === 200 && response.data.data && response.data.data.username) {
+        if (response.data && response.data.code === 0 && response.data.data && response.data.data.username) {
           console.log('获取用户名成功:', response.data.data.username);
           return response.data.data.username;
         } else if (response.data && response.data.code === 404) {
