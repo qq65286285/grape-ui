@@ -62,7 +62,6 @@
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
             <el-radio :label="0">未开始</el-radio>
-            <el-radio :label="1">进行中</el-radio>
             <el-radio :label="2">已完成</el-radio>
             <el-radio :label="3">已失败</el-radio>
           </el-radio-group>
