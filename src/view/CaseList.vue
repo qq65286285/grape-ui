@@ -51,10 +51,21 @@
           <el-input v-model="form.description" type="textarea" />
         </el-form-item>
         <el-form-item label="优先级">
-          <el-input-number v-model="form.priority" :min="0" />
+          <el-radio-group v-model="form.priority">
+            <el-radio :label="1">1</el-radio>
+            <el-radio :label="2">2</el-radio>
+            <el-radio :label="3">3</el-radio>
+            <el-radio :label="4">4</el-radio>
+            <el-radio :label="5">5</el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="状态">
-          <el-input-number v-model="form.status" :min="0" />
+          <el-radio-group v-model="form.status">
+            <el-radio :label="0">未开始</el-radio>
+            <el-radio :label="1">进行中</el-radio>
+            <el-radio :label="2">已完成</el-radio>
+            <el-radio :label="3">已失败</el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="预期结果">
           <el-input v-model="form.expectedResult" type="textarea" />
@@ -111,7 +122,7 @@ export default {
         caseNumber: "",
         title: "",
         description: "",
-        priority: 0,
+        priority: 1,
         status: 0,
         version: 0,
         environmentId: 0,
@@ -238,7 +249,7 @@ export default {
         caseNumber: "",
         title: "",
         description: "",
-        priority: 0,
+        priority: 1,
         status: 0,
         version: 0,
         environmentId: 0,
