@@ -15,7 +15,11 @@
       <el-table-column prop="title" label="标题" width="200" />
       <el-table-column prop="description" label="描述" />
       <el-table-column prop="priority" label="优先级" width="80" />
-      <el-table-column prop="status" label="状态" width="100" />
+      <el-table-column label="状态" width="100">
+        <template #default="scope">
+          {{ getStatusText(scope.row.status) }}
+        </template>
+      </el-table-column>
       <el-table-column label="创建人" width="120">
         <template #default="scope">
           {{ scope.row.username || '加载中...' }}
@@ -66,9 +70,9 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
-            <el-radio :label="0">未开始</el-radio>
-            <el-radio :label="2">已完成</el-radio>
-            <el-radio :label="3">已失败</el-radio>
+            <el-radio :label="0">未执行</el-radio>
+            <el-radio :label="1">已完成</el-radio>
+            <el-radio :label="2">已失败</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="预期结果">
@@ -309,6 +313,20 @@ export default {
     handlePageChange(pageNumber) {
       this.pagination.pageNumber = pageNumber;
       this.fetchCaseList(); // 重新加载数据
+    },
+
+    // 获取状态文本
+    getStatusText(status) {
+      switch (status) {
+        case 0:
+          return '未执行';
+        case 1:
+          return '已完成';
+        case 2:
+          return '已失败';
+        default:
+          return '未知';
+      }
     },
   },
   mounted() {
