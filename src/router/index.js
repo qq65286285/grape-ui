@@ -7,6 +7,7 @@ import PhoneManage from '@/view/PhoneManage.vue';
 import CloundPhone from '@/view/CloundPhone.vue';
 import LoginPage from '@/view/LoginPage.vue';
 import ScreenMirror from '@/view/ScreenMirror.vue';
+import TestCaseFolderTree from '@/view/TestCaseFolderTree.vue';
 
 const routes = [
   {
@@ -50,6 +51,12 @@ const routes = [
     name: 'ScreenMirror',
     component: ScreenMirror,
     meta: { requiresAuth: true, hideNavbar: true }, // 需要认证，隐藏导航栏
+  },
+  {
+    path: '/test-case-folder-tree',
+    name: 'TestCaseFolderTree',
+    component: TestCaseFolderTree,
+    meta: { requiresAuth: true }, // 添加需要认证的标识
   },
   // 添加默认路径重定向到登录页
   {

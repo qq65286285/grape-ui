@@ -6,6 +6,7 @@
       <div>
         <el-button type="primary" @click="openDialog">新增测试用例</el-button>
         <el-button type="success" @click="refreshList">刷新</el-button>
+        <el-button type="info" @click="switchToTreeView">文件夹树</el-button>
       </div>
     </div>
 
@@ -313,6 +314,11 @@ export default {
     handlePageChange(pageNumber) {
       this.pagination.pageNumber = pageNumber;
       this.fetchCaseList(); // 重新加载数据
+    },
+
+    // 切换到文件夹树视图
+    switchToTreeView() {
+      this.$router.push('/test-case-folder-tree');
     },
 
     // 获取状态文本
