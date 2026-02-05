@@ -323,24 +323,124 @@ export default {
   display: flex; /* 使用 Flex 布局 */
   justify-content: space-between; /* 标题靠左，按钮靠右 */
   align-items: center; /* 垂直居中 */
-  margin-bottom: 20px; /* 与表格的间距 */
+  margin-bottom: 24px; /* 与表格的间距 */
+  padding: 16px 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 h1 {
   text-align: center; /* 标题居中 */
   margin: 0; /* 去除默认的 margin */
   flex: 1; /* 让标题占据剩余空间 */
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
 }
 
 /* 按钮组样式 */
 .header > div {
   display: flex;
-  gap: 10px; /* 按钮之间的间距 */
+  gap: 12px; /* 按钮之间的间距 */
+}
+
+/* 表格样式 */
+.el-table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+.el-table:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.el-table th {
+  background-color: #fafafa !important;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.el-table td {
+  text-align: center;
+  padding: 12px 0;
+}
+
+/* 操作按钮样式 */
+.el-button--text {
+  color: #409eff;
+  transition: all 0.3s ease;
+}
+
+.el-button--text:hover {
+  color: #66b1ff;
+  background-color: rgba(64, 158, 255, 0.1);
 }
 
 /* 分页样式 */
 .el-pagination {
-  margin-top: 20px;
+  margin-top: 24px;
   text-align: right;
+  padding: 16px 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 对话框样式 */
+.el-dialog {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.el-dialog__header {
+  background-color: #f8f9fa;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.el-dialog__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 表单样式 */
+.el-form-item {
+  margin-bottom: 16px;
+}
+
+.el-radio-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .header > div {
+    justify-content: center;
+  }
+  
+  h1 {
+    font-size: 18px;
+  }
+  
+  .el-table {
+    font-size: 14px;
+  }
+  
+  .el-pagination {
+    text-align: center;
+  }
 }
 </style>
