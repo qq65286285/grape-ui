@@ -11,18 +11,18 @@
 
     <!-- 表格 -->
     <el-table :data="caseList.records" style="width: 100%">
-      <el-table-column prop="caseNumber" label="用例编号" width="180" />
-      <el-table-column prop="title" label="标题" width="180" />
+      <el-table-column prop="caseNumber" label="用例编号" width="160" />
+      <el-table-column prop="title" label="标题" width="200" />
       <el-table-column prop="description" label="描述" />
-      <el-table-column prop="priority" label="优先级" />
-      <el-table-column prop="status" label="状态" />
+      <el-table-column prop="priority" label="优先级" width="80" />
+      <el-table-column prop="status" label="状态" width="100" />
       <el-table-column label="创建人" width="120">
         <template #default="scope">
           {{ scope.row.username || '加载中...' }}
         </template>
       </el-table-column>
       <!-- 操作列 -->
-      <el-table-column label="操作" width="120">
+      <el-table-column label="操作" width="200">
         <template #default="scope">
           <el-button type="text" @click="editCase(scope.row)">编辑</el-button>
           <el-button type="text" @click="deleteCase(scope.row.id)">删除</el-button>
@@ -373,11 +373,21 @@ h1 {
 .el-button--text {
   color: #409eff;
   transition: all 0.3s ease;
+  margin-right: 8px;
+}
+
+.el-button--text:last-child {
+  margin-right: 0;
 }
 
 .el-button--text:hover {
   color: #66b1ff;
   background-color: rgba(64, 158, 255, 0.1);
+}
+
+/* 操作列样式 */
+.el-table .cell {
+  white-space: nowrap;
 }
 
 /* 分页样式 */
