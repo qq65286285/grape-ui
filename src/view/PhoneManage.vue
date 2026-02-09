@@ -417,28 +417,25 @@ export default {
 /* 按钮区域样式 */
 .button-group {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  justify-content: center;
   margin-top: 20px;
-  align-items: stretch;
 }
 
 .button-group .el-button {
-  width: 100%;
-  min-width: 200px;
+  width: auto;
+  min-width: 160px;
   margin-left: 0 !important;
   margin-right: 0 !important;
-}
-
-.phone-list .el-button {
+  border-radius: 8px;
   transition: all 0.3s ease;
-  border-radius: 6px;
 }
 
-.phone-list .el-button:hover {
+.button-group .el-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+
 
 /* 无手机消息样式 */
 .no-phone-message {

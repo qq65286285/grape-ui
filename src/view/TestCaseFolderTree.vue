@@ -100,9 +100,10 @@ export default {
     // 刷新树状结构
     async refreshTree() {
       try {
-        const response = await this.$http.get('/testCaseFolders/tree');
-        if (response.data.code === 200) {
-          this.folderTree = response.data.data;
+        const response = await this.$http.get('/api/testCaseFolders/list');
+        if (response.data.code === 0) {
+          this.allFolders = response.data.data;
+          this.folderTree = this.buildFolderTree(this.allFolders);
           this.$message.success('刷新成功');
         } else {
           this.$message.error('获取文件夹树失败');
@@ -112,12 +113,55 @@ export default {
       }
     },
 
+    // 构建文件夹树结构
+    buildFolderTree(folders) {
+      const folderMap = {};
+      const rootFolders = [];
+
+      // 首先创建所有文件夹的映射
+      folders.forEach(folder => {
+        folderMap[folder.id] = {
+          ...folder,
+          children: []
+        };
+      });
+
+      // 然后构建树结构
+      folders.forEach(folder => {
+        if (folder.parentId === 0) {
+          // 根文件夹
+          rootFolders.push(folderMap[folder.id]);
+        } else {
+          // 子文件夹
+          if (folderMap[folder.parentId]) {
+            folderMap[folder.parentId].children.push(folderMap[folder.id]);
+          }
+        }
+      });
+
+      // 按sort字段排序
+      this.sortFolderTree(rootFolders);
+
+      return rootFolders;
+    },
+
+    // 递归排序文件夹树
+    sortFolderTree(folders) {
+      folders.forEach(folder => {
+        if (folder.children && folder.children.length > 0) {
+          folder.children.sort((a, b) => a.sort - b.sort);
+          this.sortFolderTree(folder.children);
+        }
+      });
+    },
+
     // 获取所有文件夹
     async getAllFolders() {
       try {
-        const response = await this.$http.get('/testCaseFolders/list');
-        if (response.data.code === 200) {
+        const response = await this.$http.get('/api/testCaseFolders/list');
+        if (response.data.code === 0) {
           this.allFolders = response.data.data;
+          this.folderTree = this.buildFolderTree(this.allFolders);
         }
       } catch (error) {
         console.error('获取文件夹列表失败:', error);
@@ -153,31 +197,64 @@ export default {
     },
 
     // 处理删除文件夹
-    handleDeleteFolder(data) {
+    async handleDeleteFolder(folder) {
       this.$confirm('确定要删除这个文件夹吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(() => {
-        // 这里可以添加删除文件夹的API调用
-        this.$message.success('删除成功');
-        this.refreshTree();
+      }).then(async () => {
+        try {
+          const response = await this.$http.delete(`/api/testCaseFolders/remove/${folder.id}`);
+          if (response.data.code === 0) {
+            this.$message.success('删除成功');
+            this.refreshTree();
+          } else {
+            this.$message.error('删除失败');
+          }
+        } catch (error) {
+          this.$message.error('请求失败：' + error.message);
+        }
       }).catch(() => {
         this.$message.info('已取消删除');
       });
     },
 
     // 保存文件夹
-    saveFolder() {
+    async saveFolder() {
       if (!this.folderForm.name) {
         this.$message.error('请输入文件夹名称');
         return;
       }
 
-      // 这里可以添加保存文件夹的API调用
-      this.$message.success('保存成功');
-      this.dialogVisible = false;
-      this.refreshTree();
+      try {
+        let response;
+        if (this.folderForm.id === 0) {
+          // 新增文件夹
+          response = await this.$http.post('/api/testCaseFolders/save', {
+            name: this.folderForm.name,
+            parentId: this.folderForm.parentId,
+            sort: 1 // 默认排序值
+          });
+        } else {
+          // 更新文件夹
+          response = await this.$http.put('/api/testCaseFolders/update', {
+            id: this.folderForm.id,
+            name: this.folderForm.name,
+            parentId: this.folderForm.parentId,
+            sort: 1 // 默认排序值
+          });
+        }
+
+        if (response.data.code === 0) {
+          this.$message.success(this.folderForm.id === 0 ? '创建成功' : '更新成功');
+          this.dialogVisible = false;
+          this.refreshTree();
+        } else {
+          this.$message.error(this.folderForm.id === 0 ? '创建失败' : '更新失败');
+        }
+      } catch (error) {
+        this.$message.error('请求失败：' + error.message);
+      }
     }
   },
   mounted() {
