@@ -33,6 +33,9 @@
        <el-menu-item index="/CloundPhone">
         <span>云真机</span>
       </el-menu-item>
+      <el-menu-item index="/ai-chat">
+        <span>AI</span>
+      </el-menu-item>
     </el-menu>
 
     <!-- 内容区域 -->

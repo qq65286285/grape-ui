@@ -8,6 +8,7 @@ import CloundPhone from '@/view/CloundPhone.vue';
 import LoginPage from '@/view/LoginPage.vue';
 import ScreenMirror from '@/view/ScreenMirror.vue';
 import TestCaseFolderTree from '@/view/TestCaseFolderTree.vue';
+import AIChat from '@/view/AIChat.vue';
 
 const routes = [
   {
@@ -56,6 +57,12 @@ const routes = [
     path: '/test-case-folder-tree',
     name: 'TestCaseFolderTree',
     component: TestCaseFolderTree,
+    meta: { requiresAuth: true }, // 添加需要认证的标识
+  },
+  {
+    path: '/ai-chat',
+    name: 'AIChat',
+    component: AIChat,
     meta: { requiresAuth: true }, // 添加需要认证的标识
   },
   // 添加默认路径重定向到登录页
