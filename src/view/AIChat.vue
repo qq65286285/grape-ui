@@ -418,7 +418,10 @@ export default {
     this.messages.push(welcomeMessage);
     
     // 直接使用localhost:8209作为WebSocket连接地址，确保与后端服务匹配
-    this.wsUrl = 'ws://localhost:8209/api/ws';
+    // 从环境变量读取API地址并转换为WebSocket地址
+    const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'http://192.168.22.140:8209';
+    // 将http://转换为ws://
+    this.wsUrl = apiBaseUrl.replace(/^http:/, 'ws:') + '/api/ws';
     console.log('WebSocket连接地址:', this.wsUrl);
     
     // 连接WebSocket
