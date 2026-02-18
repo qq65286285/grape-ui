@@ -1,31 +1,109 @@
 <template>
   <div class="ai-chat-container">
-    <h1>AI聊天助手</h1>
-    <div class="chat-container">
-      <!-- 聊天记录 -->
-      <div class="chat-messages">
-        <div v-for="(message, index) in messages" :key="index" :class="['message', message.type]">
-          <div class="message-content">
-            <div class="message-header">
-              <span class="message-sender">{{ message.type === 'user' ? '我' : 'AI助手' }}</span>
-              <span class="message-time">{{ message.time }}</span>
+    <!-- 功能选择界面 -->
+    <div v-if="!activeFeature" class="features-selection">
+      <h1>AI功能中心</h1>
+      <div class="ai-features-grid">
+        <!-- AI聊天助手方块 -->
+        <div class="ai-feature-card">
+          <div class="feature-icon chat-icon"></div>
+          <h2>AI聊天助手</h2>
+          <p>与智能助手进行实时对话，获取专业建议和解答</p>
+          <el-button type="primary" @click="showChatAssistant">开始聊天助手</el-button>
+        </div>
+        
+        <!-- 文档识别方块 -->
+        <div class="ai-feature-card">
+          <div class="feature-icon document-icon"></div>
+          <h2>文档识别</h2>
+          <p>上传文档并进行智能识别和分析</p>
+          <el-button type="primary" @click="showDocumentRecognition">开始文档识别</el-button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 聊天助手全屏界面 -->
+    <div v-if="activeFeature === 'chat'" class="fullscreen-feature">
+      <div class="feature-header">
+        <h1>AI聊天助手</h1>
+        <el-button type="primary" @click="activeFeature = null">返回功能选择</el-button>
+      </div>
+      <div class="fullscreen-content">
+        <div class="chat-container">
+          <!-- 聊天记录 -->
+          <div class="chat-messages">
+            <div v-for="(message, index) in messages" :key="index" :class="['message', message.type]">
+              <div class="message-content">
+                <div class="message-header">
+                  <span class="message-sender">{{ message.type === 'user' ? '我' : 'AI助手' }}</span>
+                  <span class="message-time">{{ message.time }}</span>
+                </div>
+                <div class="message-body">{{ message.content }}</div>
+              </div>
             </div>
-            <div class="message-body">{{ message.content }}</div>
+          </div>
+          <!-- 输入区域 -->
+          <div class="chat-input-area">
+            <el-input
+              v-model="inputMessage"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入您的问题..."
+              @keyup.enter.exact="sendMessage"
+            />
+            <div class="input-actions">
+              <el-button type="primary" @click="sendMessage" :loading="isLoading">发送</el-button>
+              <el-button @click="clearMessages">清空记录</el-button>
+            </div>
           </div>
         </div>
       </div>
-      <!-- 输入区域 -->
-      <div class="chat-input-area">
-        <el-input
-          v-model="inputMessage"
-          type="textarea"
-          :rows="3"
-          placeholder="请输入您的问题..."
-          @keyup.enter.exact="sendMessage"
-        />
-        <div class="input-actions">
-          <el-button type="primary" @click="sendMessage" :loading="isLoading">发送</el-button>
-          <el-button @click="clearMessages">清空记录</el-button>
+    </div>
+    
+    <!-- 文档识别全屏界面 -->
+    <div v-if="activeFeature === 'document'" class="fullscreen-feature">
+      <div class="feature-header">
+        <h1>文档识别</h1>
+        <el-button type="primary" @click="activeFeature = null">返回功能选择</el-button>
+      </div>
+      <div class="fullscreen-content">
+        <div class="document-recognition-container">
+          <el-upload
+            class="upload-demo"
+            action="#"
+            :auto-upload="false"
+            :on-change="handleFileChange"
+            :limit="1"
+            accept=".pdf,.doc,.docx,.txt"
+          >
+            <el-button size="large" type="primary">点击上传文档</el-button>
+            <template #tip>
+              <div class="el-upload__tip">
+                支持上传 PDF、Word、TXT 格式的文档
+              </div>
+            </template>
+          </el-upload>
+          
+          <div v-if="selectedFile" class="file-info">
+            <el-icon><Document /></el-icon>
+            <span>{{ selectedFile.name }}</span>
+            <el-button type="text" @click="removeFile">移除</el-button>
+          </div>
+          
+          <el-button 
+            type="primary" 
+            :disabled="!selectedFile"
+            @click="startRecognition"
+            :loading="isRecognizing"
+          >
+            开始识别
+          </el-button>
+          
+          <div v-if="recognitionResult" class="recognition-result">
+            <h3>识别结果</h3>
+            <el-divider></el-divider>
+            <pre>{{ recognitionResult }}</pre>
+          </div>
         </div>
       </div>
     </div>
@@ -33,13 +111,25 @@
 </template>
 
 <script>
+import { Document } from '@element-plus/icons-vue';
+
 export default {
   name: 'AIChat',
+  components: {
+    Document
+  },
   data() {
     return {
+      // 功能状态
+      activeFeature: null,
+      // 聊天相关
       messages: [],
       inputMessage: '',
       isLoading: false,
+      // 文档识别相关
+      selectedFile: null,
+      isRecognizing: false,
+      recognitionResult: null,
       // WebSocket相关
       ws: null,
       wsConnected: false,
@@ -54,6 +144,50 @@ export default {
     };
   },
   methods: {
+    // 显示聊天助手
+    showChatAssistant() {
+      this.activeFeature = 'chat';
+      // 如果是第一次打开聊天助手，添加欢迎消息
+      if (this.messages.length === 0) {
+        const welcomeMessage = {
+          type: 'ai',
+          content: '你好！我是AI助手，有什么可以帮到你的吗？',
+          time: this.formatTime(new Date())
+        };
+        this.messages.push(welcomeMessage);
+      }
+    },
+    
+    // 显示文档识别
+    showDocumentRecognition() {
+      this.activeFeature = 'document';
+    },
+    
+    // 处理文件上传
+    handleFileChange(file) {
+      this.selectedFile = file.raw;
+      this.recognitionResult = null;
+    },
+    
+    // 移除文件
+    removeFile() {
+      this.selectedFile = null;
+      this.recognitionResult = null;
+    },
+    
+    // 开始文档识别
+    startRecognition() {
+      if (!this.selectedFile) return;
+      
+      this.isRecognizing = true;
+      
+      // 模拟文档识别过程
+      setTimeout(() => {
+        this.recognitionResult = `文档识别结果：\n\n文件名：${this.selectedFile.name}\n文件大小：${(this.selectedFile.size / 1024).toFixed(2)} KB\n文件类型：${this.selectedFile.type}\n\n识别状态：成功\n\n识别内容摘要：\n这是一个模拟的文档识别结果。在实际应用中，这里会显示文档的主要内容和分析结果。`;
+        this.isRecognizing = false;
+      }, 2000);
+    },
+    
     // 发送消息
     sendMessage() {
       if (!this.inputMessage.trim()) return;
@@ -409,14 +543,6 @@ export default {
     }
   },
   mounted() {
-    // 初始化时添加欢迎消息
-    const welcomeMessage = {
-      type: 'ai',
-      content: '你好！我是AI助手，有什么可以帮到你的吗？',
-      time: this.formatTime(new Date())
-    };
-    this.messages.push(welcomeMessage);
-    
     // 直接使用localhost:8209作为WebSocket连接地址，确保与后端服务匹配
     // 从环境变量读取API地址并转换为WebSocket地址
     const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'http://192.168.22.140:8209';
@@ -442,37 +568,154 @@ export default {
 
 <style scoped>
 .ai-chat-container {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* 功能选择界面 */
+.features-selection {
   height: 100%;
   display: flex;
   flex-direction: column;
+  padding: 40px 20px;
 }
 
-h1 {
-  margin-bottom: 20px;
+.features-selection h1 {
+  margin-bottom: 50px;
+  color: #333;
+  font-size: 32px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.ai-features-grid {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.ai-feature-card {
+  width: 540px;
+  height: 400px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 40px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ai-feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.feature-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: white;
+}
+
+.chat-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.document-icon {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.ai-feature-card h2 {
+  margin-bottom: 15px;
   color: #333;
   font-size: 24px;
   font-weight: 600;
 }
 
-.chat-container {
+.ai-feature-card p {
+  margin-bottom: 40px;
+  color: #666;
+  font-size: 16px;
+  line-height: 1.6;
   flex: 1;
+}
+
+.ai-feature-card .el-button {
+  padding: 12px 32px;
+  font-size: 16px;
+  align-self: flex-start;
+}
+
+/* 全屏功能界面 */
+.fullscreen-feature {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background-color: #f5f7fa;
+}
+
+.feature-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.feature-header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.feature-header .el-button {
+  padding: 10px 24px;
+  font-size: 14px;
+}
+
+.fullscreen-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 聊天容器 */
+.chat-container {
+  height: 100%;
   display: flex;
   flex-direction: column;
   border: 1px solid #eaeaea;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  background-color: #f9f9f9;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .chat-messages {
   flex: 1;
-  padding: 20px;
+  padding: 30px;
   overflow-y: auto;
-  max-height: calc(100vh - 300px);
 }
 
 .message {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   display: flex;
 }
 
@@ -485,10 +728,10 @@ h1 {
 }
 
 .message-content {
-  max-width: 80%;
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 70%;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .message.user .message-content {
@@ -505,50 +748,191 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
-  font-size: 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
   color: #999;
 }
 
 .message-sender {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .message-body {
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.6;
   color: #333;
 }
 
 .chat-input-area {
-  padding: 20px;
+  padding: 30px;
   border-top: 1px solid #eaeaea;
-  background-color: #ffffff;
+  background-color: #f9f9f9;
+}
+
+.chat-input-area .el-input {
+  margin-bottom: 20px;
+}
+
+.chat-input-area .el-input__inner {
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 120px;
 }
 
 .input-actions {
-  margin-top: 12px;
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 15px;
+}
+
+.input-actions .el-button {
+  padding: 10px 32px;
+  font-size: 16px;
+}
+
+/* 文档识别容器 */
+.document-recognition-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 40px;
+  background-color: #ffffff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.upload-demo {
+  margin-bottom: 30px;
+}
+
+.upload-demo .el-button {
+  padding: 16px 48px;
+  font-size: 18px;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  font-size: 16px;
+}
+
+.file-info .el-icon {
+  font-size: 24px;
+  color: #666;
+}
+
+.file-info span {
+  flex: 1;
+  color: #333;
+}
+
+.document-recognition-container .el-button {
+  align-self: flex-start;
+  padding: 12px 32px;
+  font-size: 16px;
+}
+
+.recognition-result {
+  flex: 1;
+  padding: 30px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  overflow-y: auto;
+}
+
+.recognition-result h3 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.recognition-result pre {
+  white-space: pre-wrap;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  margin: 0;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 /* 滚动条样式 */
-.chat-messages::-webkit-scrollbar {
-  width: 6px;
+.chat-messages::-webkit-scrollbar,
+.recognition-result::-webkit-scrollbar {
+  width: 8px;
 }
 
-.chat-messages::-webkit-scrollbar-track {
+.chat-messages::-webkit-scrollbar-track,
+.recognition-result::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
-.chat-messages::-webkit-scrollbar-thumb {
+.chat-messages::-webkit-scrollbar-thumb,
+.recognition-result::-webkit-scrollbar-thumb {
   background: #c1c1c1;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
-.chat-messages::-webkit-scrollbar-thumb:hover {
+.chat-messages::-webkit-scrollbar-thumb:hover,
+.recognition-result::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .ai-features-grid {
+    gap: 30px;
+  }
+  
+  .ai-feature-card {
+    width: 480px;
+    height: 360px;
+  }
+}
+
+@media (max-width: 768px) {
+  .features-selection {
+    padding: 20px 10px;
+  }
+  
+  .features-selection h1 {
+    font-size: 24px;
+    margin-bottom: 30px;
+  }
+  
+  .ai-feature-card {
+    width: 100%;
+    max-width: 540px;
+    height: auto;
+    min-height: 300px;
+    padding: 30px;
+  }
+  
+  .feature-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .chat-messages {
+    padding: 20px;
+  }
+  
+  .chat-input-area {
+    padding: 20px;
+  }
+  
+  .document-recognition-container {
+    padding: 20px;
+  }
 }
 </style>
