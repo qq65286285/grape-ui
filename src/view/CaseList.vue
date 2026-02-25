@@ -408,6 +408,8 @@ export default {
       const folderMap = {};
       const rootFolders = [];
 
+      console.log('原始文件夹数据:', folders);
+
       // 首先创建所有文件夹的映射
       folders.forEach(folder => {
         folderMap[folder.id] = {
@@ -415,6 +417,8 @@ export default {
           children: []
         };
       });
+
+      console.log('文件夹映射:', folderMap);
 
       // 然后构建树结构
       folders.forEach(folder => {
@@ -425,12 +429,20 @@ export default {
           // 子文件夹
           if (folderMap[folder.parentId]) {
             folderMap[folder.parentId].children.push(folderMap[folder.id]);
+          } else {
+            // 如果父文件夹不存在，将其作为根文件夹处理
+            console.warn(`父文件夹 ${folder.parentId} 不存在，将 ${folder.name} 作为根文件夹处理`);
+            rootFolders.push(folderMap[folder.id]);
           }
         }
       });
 
+      console.log('构建后的根文件夹:', rootFolders);
+
       // 按sort字段排序
       this.sortFolderTree(rootFolders);
+
+      console.log('排序后的文件夹树:', rootFolders);
 
       return rootFolders;
     },
@@ -452,7 +464,9 @@ export default {
 
     // 处理文件夹点击事件
     handleFolderClick(data) {
-      this.currentFolderId = data.id;
+      // 根目录使用id=0，其他文件夹使用实际id
+      this.currentFolderId = data.parentId === 0 ? 0 : data.id;
+      console.log('选中文件夹:', data.name, '，传递给后端的folderId:', this.currentFolderId);
       // 重新加载测试用例列表
       this.fetchCaseList();
     },
@@ -466,6 +480,12 @@ export default {
 
     // 添加子文件夹
     addSubFolder(parentFolder) {
+      // 添加参数检查
+      if (!parentFolder || !parentFolder.id) {
+        this.$message.error('无法获取父文件夹ID');
+        return;
+      }
+      
       this.folderDialogTitle = '新建文件夹';
       this.folderForm = {
         id: 0,
@@ -478,6 +498,12 @@ export default {
 
     // 编辑文件夹
     editFolder(folder) {
+      // 添加参数检查
+      if (!folder || !folder.id) {
+        this.$message.error('无法获取文件夹ID');
+        return;
+      }
+      
       this.folderDialogTitle = '修改文件夹';
       this.folderForm = {
         id: folder.id,
@@ -529,6 +555,12 @@ export default {
 
     // 确认删除文件夹
     confirmDeleteFolder(folder) {
+      // 添加参数检查
+      if (!folder || !folder.id) {
+        this.$message.error('无法获取文件夹ID');
+        return;
+      }
+      
       this.$confirm('确定要删除这个文件夹吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -543,6 +575,12 @@ export default {
     // 删除文件夹
     async deleteFolder(folderId) {
       try {
+        // 添加参数检查
+        if (!folderId) {
+          this.$message.error('无法获取文件夹ID');
+          return;
+        }
+        
         const response = await this.$http.delete(`/api/testCaseFolders/remove/${folderId}`);
         if (response.data.code === 0) {
           this.$message.success('删除成功');
@@ -564,14 +602,34 @@ export default {
     // 查看详情
     async viewCaseDetail(row) {
       try {
+        // 添加参数检查，防止row为undefined
+        if (!row || !row.id) {
+          this.$message.error("无法获取用例ID");
+          return;
+        }
+        
         const response = await this.$http.get(`/api/cases/getInfo/${row.id}`);
         if (response.data.code === 0) {
-          const caseData = response.data.data.cases;
-          const stepsData = response.data.data.steps;
+          // 添加响应数据检查
+          if (!response.data.data) {
+            this.$message.error("获取用例详情失败：数据格式错误");
+            return;
+          }
+          
+          const data = response.data.data;
+          const caseData = data.case;
+          const stepsData = data.steps;
+          
+          // 检查caseData是否存在
+          if (!caseData) {
+            this.$message.error("获取用例详情失败：用例数据不存在");
+            return;
+          }
           
           this.dialogTitle = "查看测试用例详情";
           this.isEditMode = true;
-          // 处理步骤数据，如果为空则初始化一个步骤
+          
+          // 处理步骤数据
           let steps = [];
           if (stepsData && stepsData.length > 0) {
             steps = stepsData.map(step => ({
@@ -639,6 +697,12 @@ export default {
 
     // 显示历史版本
     async showHistory(caseId) {
+      // 添加参数检查
+      if (!caseId) {
+        this.$message.error("无法获取用例ID");
+        return;
+      }
+      
       this.currentCaseId = caseId;
       // 重置分页信息（使用响应式更新）
       this.historyPagination = {
@@ -785,6 +849,12 @@ export default {
     // 删除用例
     async deleteCase(id) {
       try {
+        // 添加参数检查
+        if (!id) {
+          this.$message.error("无法获取用例ID");
+          return;
+        }
+        
         const response = await this.$http.delete(`/api/cases/remove/${id}`);
         if (response.data.code === 0) {
           this.$message.success("删除成功");

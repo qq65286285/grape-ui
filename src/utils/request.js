@@ -38,7 +38,7 @@ service.interceptors.response.use(
       localStorage.removeItem('token')
       localStorage.removeItem('userId')
       localStorage.removeItem('username')
-      // window.location.href = '/login'
+      window.location.href = '/LoginPage'
     }
     
     // 提取后端详细错误信息

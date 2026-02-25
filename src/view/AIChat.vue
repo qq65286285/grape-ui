@@ -19,6 +19,14 @@
           <p>上传文档并进行智能识别和分析</p>
           <el-button type="primary" @click="showDocumentRecognition">开始文档识别</el-button>
         </div>
+        
+        <!-- 测试用例生成 -->
+          <div class="ai-feature-card">
+            <div class="feature-icon scenario-icon"></div>
+            <h2>测试用例生成</h2>
+            <p>通过描述测试场景，智能生成测试用例</p>
+            <el-button type="primary" @click="showTestCaseGeneration">开始生成</el-button>
+          </div>
       </div>
     </div>
     
@@ -107,6 +115,159 @@
         </div>
       </div>
     </div>
+    
+    <!-- 测试用例生成全屏界面 -->
+    <div v-if="activeFeature === 'scenario'" class="fullscreen-feature">
+      <div class="feature-header">
+        <h1>生成测试用例</h1>
+        <el-button type="primary" @click="activeFeature = null">返回功能选择</el-button>
+      </div>
+      <div class="fullscreen-content">
+        <div class="scenario-generation-container">
+          <!-- 场景列表 -->
+          <el-card shadow="never" class="scenario-list-card" style="margin-bottom: 30px" :key="'scenario-list-' + scenarioList.length">
+            <template #header>
+              <div class="card-header">
+                <span>场景列表</span>
+                <el-button type="primary" size="small" @click="saveCurrentScenario">保存当前场景</el-button>
+              </div>
+            </template>
+            <div class="scenario-list-content">
+              <el-empty v-if="scenarioList.length === 0" description="暂无保存的场景" />
+              <el-table v-else :data="scenarioList" style="width: 100%">
+                <el-table-column prop="module" label="功能模块" width="180" />
+                <el-table-column prop="createdAt" label="保存时间" width="180">
+                  <template #default="scope">
+                    {{ new Date(scope.row.createdAt).toLocaleString() }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="200">
+                  <template #default="scope">
+                    <el-button type="primary" size="small" @click="loadScenario(scope.row)">加载</el-button>
+                    <el-button type="danger" size="small" @click="deleteScenario(scope.row.id)">删除</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </el-card>
+          
+          <el-form :model="scenarioForm" label-width="120px">
+            <el-form-item label="1. 功能模块">
+              <el-input
+                v-model="scenarioForm.module"
+                placeholder="请输入测试的功能模块，例如：用户登录、商品购买、订单管理等"
+              />
+            </el-form-item>
+            
+            <el-form-item label="2. 用户故事">
+              <el-card shadow="never" class="user-story-card">
+                <div class="user-story-item">
+                  <span class="label">角色：</span>
+                  <el-input v-model="scenarioForm.role" placeholder="作为..." style="width: 200px; margin-left: 10px" />
+                </div>
+                <div class="user-story-item">
+                  <span class="label">功能：</span>
+                  <el-input v-model="scenarioForm.feature" placeholder="我希望..." style="flex: 1; margin-left: 10px" />
+                </div>
+                <div class="user-story-item">
+                  <span class="label">价值：</span>
+                  <el-input v-model="scenarioForm.value" placeholder="以便..." style="flex: 1; margin-left: 10px" />
+                </div>
+              </el-card>
+            </el-form-item>
+            
+            <el-form-item label="3. 验收标准">
+              <div class="multi-input-container">
+                <div v-for="(criterion, index) in scenarioForm.acceptanceCriteria" :key="index" class="multi-input-item">
+                  <el-input
+                    v-model="scenarioForm.acceptanceCriteria[index]"
+                    placeholder="请输入验收标准"
+                    style="width: 400px; margin-right: 10px"
+                  />
+                  <el-button type="danger" @click="removeAcceptanceCriterion(index)">-</el-button>
+                </div>
+                <el-button type="primary" @click="addAcceptanceCriterion">+ 添加验收标准</el-button>
+              </div>
+            </el-form-item>
+            
+            <el-form-item label="4. 边界条件">
+              <div class="multi-input-container">
+                <div v-for="(condition, index) in scenarioForm.boundaryConditions" :key="index" class="multi-input-item">
+                  <el-input
+                    v-model="scenarioForm.boundaryConditions[index]"
+                    placeholder="请输入边界条件"
+                    style="width: 400px; margin-right: 10px"
+                  />
+                  <el-button type="danger" @click="removeBoundaryCondition(index)">-</el-button>
+                </div>
+                <el-button type="primary" @click="addBoundaryCondition">+ 添加边界条件</el-button>
+              </div>
+            </el-form-item>
+            
+            <el-form-item label="5. 关联模块">
+              <el-input
+                v-model="scenarioForm.relatedModules"
+                placeholder="请输入关联的功能模块，例如：用户管理、权限控制等"
+              />
+            </el-form-item>
+            
+            <el-form-item label="6. 测试维度">
+              <el-checkbox-group v-model="scenarioForm.testDimensions">
+                <el-checkbox label="功能测试">核心业务流程</el-checkbox>
+                <el-checkbox label="边界测试">输入边界值</el-checkbox>
+                <el-checkbox label="异常测试">错误处理</el-checkbox>
+                <el-checkbox label="兼容性测试">不同环境</el-checkbox>
+                <el-checkbox label="性能测试">响应时间/并发</el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+          </el-form>
+          
+          <el-button 
+            type="primary" 
+            :disabled="!scenarioForm.module || !scenarioForm.acceptanceCriteria.length"
+            @click="generateTestCases"
+            :loading="isGenerating"
+            style="margin-top: 20px"
+          >
+            生成测试用例
+          </el-button>
+          
+          <!-- 示例说明 -->
+          <el-card shadow="never" class="example-card" style="margin-top: 30px">
+            <template #header>
+              <div class="card-header">
+                <span>示例说明</span>
+              </div>
+            </template>
+            <div class="example-content">
+              <h4>电商App的「手机号验证码登录」功能测试用例示例：</h4>
+              <ul>
+                <li><strong>场景：</strong>用户输入正确手机号+6位验证码登录</li>
+                <li><strong>场景：</strong>验证码错误/过期/为空</li>
+                <li><strong>场景：</strong>手机号格式错误（少于11位、非数字）</li>
+                <li><strong>场景：</strong>60秒内重复请求验证码</li>
+              </ul>
+              <p><strong>需覆盖：</strong>正常流程、异常流程、边界值、安全性（暴力破解防护）</p>
+            </div>
+          </el-card>
+          
+          <div v-if="generatedCases" class="generated-cases">
+            <h3>生成的测试用例</h3>
+            <el-divider></el-divider>
+            <div v-for="(testCase, index) in generatedCases" :key="index" class="test-case-item">
+              <h4>测试用例 {{ index + 1 }}</h4>
+              <div class="test-case-content">
+                <p><strong>用例编号：</strong>{{ testCase.caseNumber }}</p>
+                <p><strong>用例标题：</strong>{{ testCase.title }}</p>
+                <p><strong>用户故事：</strong>{{ testCase.userStory }}</p>
+                <p><strong>验收标准：</strong>{{ testCase.acceptanceCriteria || '无' }}</p>
+                <p><strong>边界条件：</strong>{{ testCase.boundaryConditions || '无' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -130,6 +291,26 @@ export default {
       selectedFile: null,
       isRecognizing: false,
       recognitionResult: null,
+      // 测试场景生成相关
+    scenarioForm: {
+      module: '',
+      // 用户故事
+      role: '',
+      feature: '',
+      value: '',
+      // 验收标准
+      acceptanceCriteria: [],
+      // 边界条件和关联模块
+      boundaryConditions: [],
+      relatedModules: '',
+      // 测试维度
+      testDimensions: ['功能测试']
+    },
+    isGenerating: false,
+    generatedCases: null,
+    // 场景列表
+    scenarioList: [],
+    currentScenario: null,
       // WebSocket相关
       ws: null,
       wsConnected: false,
@@ -161,6 +342,71 @@ export default {
     // 显示文档识别
     showDocumentRecognition() {
       this.activeFeature = 'document';
+    },
+    
+    // 显示测试用例生成
+    showTestCaseGeneration() {
+      this.activeFeature = 'scenario';
+      // 重置表单和结果
+      this.scenarioForm = {
+        module: '',
+        // 用户故事
+        role: '',
+        feature: '',
+        value: '',
+        // 验收标准
+        acceptanceCriteria: [],
+        // 边界条件和关联模块
+        boundaryConditions: [],
+        relatedModules: '',
+        // 测试维度
+        testDimensions: ['功能测试']
+      };
+      this.generatedCases = null;
+    },
+    
+    // 生成测试用例
+    async generateTestCases() {
+      if (!this.scenarioForm.module) {
+        this.$message.error('请填写功能模块');
+        return;
+      }
+      
+      this.isGenerating = true;
+      this.generatedCases = null;
+      
+      try {
+        // 构建请求参数
+        const requestData = {
+          "module": this.scenarioForm.module,
+          "userStory": `作为${this.scenarioForm.role || '用户'}，我希望${this.scenarioForm.feature || '使用该功能'}，以便${this.scenarioForm.value || '实现目标'}`,
+          "acceptanceCriteria": this.scenarioForm.acceptanceCriteria.join('\n'),
+          "boundaryConditions": this.scenarioForm.boundaryConditions.join('\n'),
+          "relatedModules": this.scenarioForm.relatedModules,
+          "testDimensions": this.scenarioForm.testDimensions,
+          "caseType": "Functional Test Case",
+          "caseCount": 5,
+          "referenceMode": true,
+          "similarityThreshold": 0.7,
+          "generateMode": "Detailed Mode",
+          "caseTemplate": "Standard Test Case Template",
+          "coverageRequirements": ["Functional Coverage", "Boundary Coverage", "Exception Coverage"]
+        };
+        
+        // 调用API生成测试用例
+        const response = await this.$http.post('/api/ai/testcase/generate', requestData);
+        
+        if (response.data.code === 0) {
+          // 处理API响应
+          this.generatedCases = response.data.data || [];
+        } else {
+          this.$message.error(response.data.message || '生成测试用例失败');
+        }
+      } catch (error) {
+        this.$message.error(error.message || '生成测试用例失败');
+      } finally {
+        this.isGenerating = false;
+      }
     },
     
     // 处理文件上传
@@ -540,6 +786,74 @@ export default {
         clearTimeout(this.heartbeatTimer);
         this.heartbeatTimer = null;
       }
+    },
+    
+    // 场景列表相关方法
+    // 保存当前场景
+    saveCurrentScenario() {
+      if (!this.scenarioForm.module) {
+        this.$message.error('请填写功能模块');
+        return;
+      }
+      
+      const scenario = {
+        id: Date.now(),
+        module: this.scenarioForm.module,
+        role: this.scenarioForm.role,
+        feature: this.scenarioForm.feature,
+        value: this.scenarioForm.value,
+        acceptanceCriteria: [...this.scenarioForm.acceptanceCriteria],
+        boundaryConditions: [...this.scenarioForm.boundaryConditions],
+        relatedModules: this.scenarioForm.relatedModules,
+        testDimensions: [...this.scenarioForm.testDimensions],
+        createdAt: Date.now()
+      };
+      
+      this.scenarioList.push(scenario);
+      this.$message.success('场景保存成功');
+    },
+    
+    // 加载场景
+    loadScenario(scenario) {
+      this.scenarioForm = {
+        module: scenario.module,
+        role: scenario.role,
+        feature: scenario.feature,
+        value: scenario.value,
+        acceptanceCriteria: [...scenario.acceptanceCriteria],
+        boundaryConditions: [...scenario.boundaryConditions],
+        relatedModules: scenario.relatedModules,
+        testDimensions: [...scenario.testDimensions]
+      };
+      this.currentScenario = scenario;
+      this.$message.success('场景加载成功');
+    },
+    
+    // 删除场景
+    deleteScenario(scenarioId) {
+      this.scenarioList = this.scenarioList.filter(item => item.id !== scenarioId);
+      if (this.currentScenario && this.currentScenario.id === scenarioId) {
+        this.currentScenario = null;
+      }
+      this.$message.success('场景删除成功');
+    },
+    
+    // 验收标准相关方法
+    addAcceptanceCriterion() {
+      this.scenarioForm.acceptanceCriteria.push('');
+    },
+    
+    removeAcceptanceCriterion(index) {
+      this.scenarioForm.acceptanceCriteria.splice(index, 1);
+    },
+    
+    // 边界条件相关方法
+    addBoundaryCondition() {
+      this.scenarioForm.boundaryConditions.push('');
+    },
+    
+    removeBoundaryCondition(index) {
+      this.scenarioForm.boundaryConditions.splice(index, 1);
     }
   },
   mounted() {
@@ -595,19 +909,20 @@ export default {
 
 .ai-features-grid {
   display: flex;
-  gap: 40px;
+  gap: 30px;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
   flex-wrap: wrap;
   flex: 1;
+  padding: 0 20px;
 }
 
 .ai-feature-card {
-  width: 540px;
-  height: 400px;
+  width: 380px;
+  height: 320px;
   border: 1px solid #eaeaea;
   border-radius: 12px;
-  padding: 40px;
+  padding: 30px;
   background-color: #ffffff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -621,14 +936,14 @@ export default {
 }
 
 .feature-icon {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 24px;
   color: white;
 }
 
@@ -640,24 +955,28 @@ export default {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
+.scenario-icon {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
 .ai-feature-card h2 {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   color: #333;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
 }
 
 .ai-feature-card p {
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   color: #666;
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.5;
   flex: 1;
 }
 
 .ai-feature-card .el-button {
-  padding: 12px 32px;
-  font-size: 16px;
+  padding: 10px 24px;
+  font-size: 14px;
   align-self: flex-start;
 }
 
@@ -864,6 +1183,126 @@ export default {
   font-family: 'Courier New', Courier, monospace;
 }
 
+/* 测试场景生成容器 */
+.scenario-generation-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 40px;
+  background-color: #ffffff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.scenario-generation-container .el-form {
+  margin-bottom: 20px;
+}
+
+.scenario-generation-container .el-form-item {
+  margin-bottom: 24px;
+}
+
+.scenario-generation-container .el-textarea {
+  width: 100%;
+}
+
+.scenario-generation-container .el-textarea__inner {
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 120px;
+}
+
+/* 用户故事卡片样式 */
+.user-story-card {
+  padding: 20px;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.user-story-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.user-story-item:last-child {
+  margin-bottom: 0;
+}
+
+.user-story-item .label {
+  font-weight: 600;
+  color: #666;
+  min-width: 60px;
+}
+
+.user-story-item .el-input {
+  flex: 1;
+}
+
+/* 测试维度样式 */
+.scenario-generation-container .el-checkbox {
+  margin-right: 20px;
+  margin-bottom: 10px;
+}
+
+.scenario-generation-container .el-checkbox__label {
+  font-size: 14px;
+}
+
+/* 生成的测试用例 */
+.generated-cases {
+  flex: 1;
+  padding: 30px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  overflow-y: auto;
+  margin-top: 20px;
+}
+
+.generated-cases h3 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.test-case-item {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.test-case-item h4 {
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 10px;
+}
+
+.test-case-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.test-case-content p {
+  margin-bottom: 10px;
+}
+
+.test-case-content strong {
+  color: #666;
+  margin-right: 8px;
+}
+
 /* 滚动条样式 */
 .chat-messages::-webkit-scrollbar,
 .recognition-result::-webkit-scrollbar {
@@ -885,6 +1324,84 @@ export default {
 .chat-messages::-webkit-scrollbar-thumb:hover,
 .recognition-result::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 场景列表卡片样式 */
+.scenario-list-card {
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.scenario-list-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.scenario-list-content {
+  padding: 10px 0;
+}
+
+/* 示例卡片样式 */
+.example-card {
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.example-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.example-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #666;
+}
+
+.example-content h4 {
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.example-content ul {
+  margin-bottom: 15px;
+  padding-left: 20px;
+}
+
+.example-content li {
+  margin-bottom: 8px;
+}
+
+.example-content p {
+  margin-bottom: 0;
+}
+
+/* 多输入框样式 */
+.multi-input-container {
+  margin-bottom: 10px;
+}
+
+.multi-input-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.multi-input-item .el-input {
+  flex: 1;
+  margin-right: 10px;
 }
 
 /* 响应式设计 */
