@@ -592,7 +592,7 @@ export default {
                     }
                   }
                   
-                  console.log('找到最后一条AI消息索引:', lastAiMessageIndex);
+                  console.log('找到最后1条AI消息索引:', lastAiMessageIndex);
                   
                   if (lastAiMessageIndex >= 0) {
                     // 更新最后一条AI消息
