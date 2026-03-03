@@ -12,13 +12,7 @@
           <el-button type="primary" @click="showChatAssistant">开始聊天助手</el-button>
         </div>
         
-        <!-- 文档识别方块 -->
-        <div class="ai-feature-card">
-          <div class="feature-icon document-icon"></div>
-          <h2>文档识别</h2>
-          <p>上传文档并进行智能识别和分析</p>
-          <el-button type="primary" @click="showDocumentRecognition">开始文档识别</el-button>
-        </div>
+
         
         <!-- 测试用例生成 -->
           <div class="ai-feature-card">
@@ -46,6 +40,14 @@
                   <span class="message-sender">{{ message.type === 'user' ? '我' : 'AI助手' }}</span>
                   <span class="message-time">{{ message.time }}</span>
                 </div>
+                <!-- 思考内容 -->
+                <div v-if="message.type === 'ai' && message.reasoning" class="message-reasoning">
+                  <div class="reasoning-header">
+                    <!-- <span class="reasoning-label">思考过程</span> -->
+                  </div>
+                  <div class="reasoning-content">{{ message.reasoning }}</div>
+                </div>
+                <!-- 聊天内容 -->
                 <div class="message-body">{{ message.content }}</div>
               </div>
             </div>
@@ -123,16 +125,21 @@
         <el-button type="primary" @click="activeFeature = null">返回功能选择</el-button>
       </div>
       <div class="fullscreen-content">
-        <div class="scenario-generation-container">
+        <div class="scenario-generation-wrapper">
+          <!-- 左侧测试用例生成 -->
+          <div class="scenario-generation-container">
           <!-- 场景列表 -->
-          <el-card shadow="never" class="scenario-list-card" style="margin-bottom: 30px" :key="'scenario-list-' + scenarioList.length">
-            <template #header>
-              <div class="card-header">
-                <span>场景列表</span>
-                <el-button type="primary" size="small" @click="saveCurrentScenario">保存当前场景</el-button>
+          <div class="scenario-list-container">
+            <div class="scenario-list-header" @click="toggleScenarioList">
+              <span>场景列表</span>
+              <div class="header-actions">
+                <el-button type="primary" size="small" @click.stop="saveCurrentScenario">保存当前场景</el-button>
+                <el-button size="small" @click.stop="toggleScenarioList">
+                  {{ isScenarioListCollapsed ? '展开' : '收起' }}
+                </el-button>
               </div>
-            </template>
-            <div class="scenario-list-content">
+            </div>
+            <div v-if="!isScenarioListCollapsed" class="scenario-list-content">
               <el-empty v-if="scenarioList.length === 0" description="暂无保存的场景" />
               <el-table v-else :data="scenarioList" style="width: 100%">
                 <el-table-column prop="module" label="功能模块" width="180" />
@@ -149,7 +156,7 @@
                 </el-table-column>
               </el-table>
             </div>
-          </el-card>
+          </div>
           
           <el-form :model="scenarioForm" label-width="120px">
             <el-form-item label="1. 功能模块">
@@ -160,20 +167,20 @@
             </el-form-item>
             
             <el-form-item label="2. 用户故事">
-              <el-card shadow="never" class="user-story-card">
+              <div class="user-story-card">
                 <div class="user-story-item">
                   <span class="label">角色：</span>
-                  <el-input v-model="scenarioForm.role" placeholder="作为..." style="width: 200px; margin-left: 10px" />
+                  <el-input v-model="scenarioForm.role" placeholder="作为..." />
                 </div>
                 <div class="user-story-item">
                   <span class="label">功能：</span>
-                  <el-input v-model="scenarioForm.feature" placeholder="我希望..." style="flex: 1; margin-left: 10px" />
+                  <el-input v-model="scenarioForm.feature" placeholder="我希望..." />
                 </div>
                 <div class="user-story-item">
                   <span class="label">价值：</span>
-                  <el-input v-model="scenarioForm.value" placeholder="以便..." style="flex: 1; margin-left: 10px" />
+                  <el-input v-model="scenarioForm.value" placeholder="以便..." />
                 </div>
-              </el-card>
+              </div>
             </el-form-item>
             
             <el-form-item label="3. 验收标准">
@@ -220,36 +227,24 @@
                 <el-checkbox label="性能测试">响应时间/并发</el-checkbox>
               </el-checkbox-group>
             </el-form-item>
+            
+            <el-form-item label="7. 用例数量">
+              <el-input-number v-model="scenarioForm.caseCount" :min="1" :max="20" :step="1" placeholder="请输入用例数量" />
+            </el-form-item>
           </el-form>
           
-          <el-button 
-            type="primary" 
-            :disabled="!scenarioForm.module || !scenarioForm.acceptanceCriteria.length"
-            @click="generateTestCases"
-            :loading="isGenerating"
-            style="margin-top: 20px"
-          >
-            生成测试用例
-          </el-button>
+          <div class="generate-button-container">
+            <el-button 
+              type="primary" 
+              :disabled="!scenarioForm.module || !scenarioForm.acceptanceCriteria.length"
+              @click="generateTestCases"
+              :loading="isGenerating"
+            >
+              生成测试用例
+            </el-button>
+          </div>
           
-          <!-- 示例说明 -->
-          <el-card shadow="never" class="example-card" style="margin-top: 30px">
-            <template #header>
-              <div class="card-header">
-                <span>示例说明</span>
-              </div>
-            </template>
-            <div class="example-content">
-              <h4>电商App的「手机号验证码登录」功能测试用例示例：</h4>
-              <ul>
-                <li><strong>场景：</strong>用户输入正确手机号+6位验证码登录</li>
-                <li><strong>场景：</strong>验证码错误/过期/为空</li>
-                <li><strong>场景：</strong>手机号格式错误（少于11位、非数字）</li>
-                <li><strong>场景：</strong>60秒内重复请求验证码</li>
-              </ul>
-              <p><strong>需覆盖：</strong>正常流程、异常流程、边界值、安全性（暴力破解防护）</p>
-            </div>
-          </el-card>
+
           
           <div v-if="generatedCases" class="generated-cases">
             <h3>生成的测试用例</h3>
@@ -262,6 +257,43 @@
                 <p><strong>用户故事：</strong>{{ testCase.userStory }}</p>
                 <p><strong>验收标准：</strong>{{ testCase.acceptanceCriteria || '无' }}</p>
                 <p><strong>边界条件：</strong>{{ testCase.boundaryConditions || '无' }}</p>
+              </div>
+            </div>
+          </div>
+          </div>
+          
+          <!-- 右侧聊天框 -->
+          <div class="scenario-chat-container">
+            <div class="chat-header">
+              <h3>AI助手</h3>
+            </div>
+            <div class="chat-messages">
+              <div v-for="(message, index) in messages" :key="index" :class="['message', message.type]">
+                <div class="message-content">
+                  <div class="message-header">
+                    <span class="message-sender">{{ message.type === 'user' ? '我' : 'AI助手' }}</span>
+                    <span class="message-time">{{ message.time }}</span>
+                  </div>
+                  <!-- 思考内容 -->
+                  <div v-if="message.type === 'ai' && message.reasoning" class="message-reasoning">
+                    <div class="reasoning-content">{{ message.reasoning }}</div>
+                  </div>
+                  <!-- 聊天内容 -->
+                  <div class="message-body">{{ message.content }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <el-input
+                v-model="inputMessage"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入您的问题..."
+                @keyup.enter.exact="sendMessage"
+              />
+              <div class="input-actions">
+                <el-button type="primary" @click="sendMessage" :loading="isLoading">发送</el-button>
+                <el-button @click="clearMessages">清空记录</el-button>
               </div>
             </div>
           </div>
@@ -293,7 +325,7 @@ export default {
       recognitionResult: null,
       // 测试场景生成相关
     scenarioForm: {
-      module: '',
+      module: '订单模块',
       // 用户故事
       role: '',
       feature: '',
@@ -304,13 +336,17 @@ export default {
       boundaryConditions: [],
       relatedModules: '',
       // 测试维度
-      testDimensions: ['功能测试']
+      testDimensions: ['功能测试'],
+      // 用例数量
+      caseCount: 5
     },
     isGenerating: false,
     generatedCases: null,
     // 场景列表
     scenarioList: [],
     currentScenario: null,
+    // 场景列表折叠状态
+    isScenarioListCollapsed: true,
       // WebSocket相关
       ws: null,
       wsConnected: false,
@@ -320,6 +356,8 @@ export default {
       // 流式输出相关
       currentAiMessageId: null,
       currentAiMessageIndex: -1,
+      // 当前轮次聊天内容
+      currentChatContent: '',
       // 心跳相关
       heartbeatTimer: null
     };
@@ -349,18 +387,20 @@ export default {
       this.activeFeature = 'scenario';
       // 重置表单和结果
       this.scenarioForm = {
-        module: '',
+        module: '订单模块',
         // 用户故事
-        role: '',
-        feature: '',
-        value: '',
+        role: '用户',
+        feature: '使用该功能',
+        value: '实现目标',
         // 验收标准
-        acceptanceCriteria: [],
+        acceptanceCriteria: ['功能正常运行', '界面显示正确', '响应速度快'],
         // 边界条件和关联模块
-        boundaryConditions: [],
+        boundaryConditions: ['输入为空', '输入过长', '网络异常'],
         relatedModules: '',
         // 测试维度
-        testDimensions: ['功能测试']
+        testDimensions: ['功能测试', '边界测试', '异常测试'],
+        // 用例数量
+        caseCount: 5
       };
       this.generatedCases = null;
     },
@@ -385,7 +425,7 @@ export default {
           "relatedModules": this.scenarioForm.relatedModules,
           "testDimensions": this.scenarioForm.testDimensions,
           "caseType": "Functional Test Case",
-          "caseCount": 5,
+          "caseCount": this.scenarioForm.caseCount,
           "referenceMode": true,
           "similarityThreshold": 0.7,
           "generateMode": "Detailed Mode",
@@ -396,15 +436,13 @@ export default {
         // 调用API生成测试用例
         const response = await this.$http.post('/api/ai/testcase/generate', requestData);
         
-        if (response.data.code === 0) {
-          // 处理API响应
-          this.generatedCases = response.data.data || [];
-        } else {
+        if (response.data.code !== 0) {
           this.$message.error(response.data.message || '生成测试用例失败');
+          this.isGenerating = false;
         }
+        // 成功响应由WebSocket处理
       } catch (error) {
         this.$message.error(error.message || '生成测试用例失败');
-      } finally {
         this.isGenerating = false;
       }
     },
@@ -449,17 +487,12 @@ export default {
       this.messages.push(userMessage);
       console.log('添加用户消息后:', this.messages);
       
-      // 创建AI消息占位符
-      const aiMessagePlaceholder = {
-        type: 'ai',
-        content: '',
-        time: this.formatTime(new Date())
-      };
-      this.messages.push(aiMessagePlaceholder);
-      this.currentAiMessageIndex = this.messages.length - 1;
-      this.currentAiMessageId = Date.now(); // 用于标识当前AI消息
-      console.log('创建AI消息占位符，索引:', this.currentAiMessageIndex);
-      console.log('创建占位符后消息列表:', this.messages);
+      // 重置当前轮次聊天内容
+      this.currentChatContent = '';
+      // 不创建占位符，等待AI回复后直接创建新消息
+      this.currentAiMessageIndex = -1;
+      // 生成一个唯一的消息ID，用于后续的流式输出匹配
+      this.currentAiMessageId = Date.now() + Math.random().toString(36).substr(2, 9);
       
       // 清空输入框
       const question = this.inputMessage.trim();
@@ -575,46 +608,211 @@ export default {
             console.log('当前AI消息索引:', this.currentAiMessageIndex);
             console.log('当前消息列表长度:', this.messages.length);
             
+            // 消息过滤：根据当前激活的功能处理相应服务的消息
+            // 当无活动功能时，跳过所有服务消息
+            if (!this.activeFeature) {
+              console.log('跳过服务消息，当前无活动功能:', message.service);
+              return;
+            }
+            
+            if (message.service) {
+              if (this.activeFeature === 'chat' && message.service !== 'ai_chat') {
+                console.log('跳过非ai_chat服务的消息:', message.service);
+                return;
+              } else if (this.activeFeature === 'scenario' && message.service !== 'test_case_generator') {
+                console.log('跳过非test_case_generator服务的消息:', message.service);
+                return;
+              }
+            }
+            
             // 处理新的消息格式
             if (message.header && message.payload) {
               // 检查是否是成功响应
-              if (message.header.code === 0 && message.header.status === 1) {
+              if (message.header.code === 0) {
+                // 处理测试用例生成消息
+                if (message.service === 'test_case_generator' && message.type === 'test_cases' && message.test_cases) {
+                  console.log('收到测试用例生成消息:', message.test_cases);
+                  this.generatedCases = message.test_cases;
+                  this.isGenerating = false;
+                  // 继续处理，让消息在聊天框中显示
+                }
+                // 当收到测试用例生成服务的完整响应时，重置加载状态
+                if (message.service === 'test_case_generator' && message.header.status === 2) {
+                  console.log('收到测试用例生成服务的完整响应，重置加载状态');
+                  this.isGenerating = false;
+                }
+                
+                const status = message.header.status;
+                const sid = message.header.sid;
+                console.log('消息状态:', status);
+                console.log('消息会话ID:', sid);
+                
                 // 提取AI回复内容
-                const aiResponse = message.payload.choices?.text?.[0]?.reasoning_content;
-                console.log('提取到的AI响应:', aiResponse);
-                if (aiResponse) {
-                  // 查找最后一条AI消息
-                  let lastAiMessageIndex = -1;
-                  for (let i = this.messages.length - 1; i >= 0; i--) {
-                    if (this.messages[i].type === 'ai') {
-                      lastAiMessageIndex = i;
-                      break;
+                const reasoningContent = message.payload.choices?.text?.[0]?.reasoning_content;
+                let chatContent = message.payload.choices?.text?.[0]?.content;
+                
+                // 处理聊天内容，移除可能的JSON格式结尾
+                if (chatContent) {
+                  // 移除可能的JSON格式结尾部分，包括各种变体
+                  // chatContent = chatContent.replace(/\s*(?:\]\s*)?}\s*$/g, '');
+                  // 保留换行符，确保维度部分正确换行
+                  chatContent = chatContent.replace(/\n/g, '\n');
+                  // 确保内容不为空
+                  if (chatContent.trim() === '') {
+                    chatContent = null;
+                  }
+                }
+                
+                console.log('提取到的AI思考内容:', reasoningContent);
+                console.log('提取到的AI聊天内容:', chatContent);
+                console.log('完整消息结构:', message);
+                
+                if (reasoningContent || chatContent) {
+                  // 查找或创建AI消息
+                  let aiMessageIndex = -1;
+                  
+                  // 使用sid查找现有的消息
+                  if (sid) {
+                    for (let i = this.messages.length - 1; i >= 0; i--) {
+                      if (this.messages[i].type === 'ai' && this.messages[i].sid === sid) {
+                        aiMessageIndex = i;
+                        break;
+                      }
                     }
                   }
                   
-                  console.log('找到最后1条AI消息索引:', lastAiMessageIndex);
-                  
-                  if (lastAiMessageIndex >= 0) {
-                    // 更新最后一条AI消息
-                    console.log('更新最后一条AI消息，索引:', lastAiMessageIndex);
-                    console.log('更新前内容:', this.messages[lastAiMessageIndex].content);
-                    // 追加内容到最后一条AI消息
-                    this.messages[lastAiMessageIndex].content += aiResponse;
-                    console.log('更新后内容:', this.messages[lastAiMessageIndex].content);
+                  if (aiMessageIndex >= 0) {
+                    // 更新现有消息
+                    console.log('更新AI消息，索引:', aiMessageIndex);
+                    console.log('更新前消息:', this.messages[aiMessageIndex]);
+                    
+                    // 根据内容类型更新
+                    if (reasoningContent) {
+                      // 思考过程
+                      this.messages[aiMessageIndex].reasoning = (this.messages[aiMessageIndex].reasoning || '') + reasoningContent;
+                      console.log('设置思考过程:', reasoningContent);
+                    } else if (chatContent) {
+                      // 将内容添加到当前轮次聊天内容
+                      this.currentChatContent += chatContent;
+                      
+                      // 检测并处理JSON代码块
+                      let processedContent = chatContent;
+                      
+                      // 检查是否包含JSON代码块
+                      const jsonBlockRegex = /```json[\s\S]*?```/g;
+                      let match;
+                      while ((match = jsonBlockRegex.exec(processedContent)) !== null) {
+                        const fullMatch = match[0];
+                        // 提取JSON内容
+                        const jsonContent = fullMatch.replace(/```json[\s\n]*(.*?)[\s\n]*```/s, '$1').trim();
+                        console.log('提取到的JSON内容:', jsonContent);
+                        try {
+                          // 解析并格式化JSON
+                          const parsedJson = JSON.parse(jsonContent);
+                          const formattedJson = JSON.stringify(parsedJson, null, 2);
+                          console.log('格式化后的JSON:', formattedJson);
+                          // 替换为格式化后的JSON
+                          processedContent = processedContent.replace(fullMatch, '```json\n' + formattedJson + '\n```');
+                        } catch (e) {
+                          console.error('JSON解析失败:', e);
+                        }
+                      }
+                      
+                      // 确保维度部分正确换行
+                      // 检测"维度"关键字并确保其后有换行
+                      processedContent = processedContent.replace(/(维度：|维度:)/g, '$1\n');
+                      
+                      // 聊天内容
+                      this.messages[aiMessageIndex].content = (this.messages[aiMessageIndex].content || '') + processedContent;
+                      console.log('设置聊天内容:', processedContent);
+                      // 聊天内容返回时关闭加载状态
+                      this.isLoading = false;
+                    }
+                    
+                    console.log('更新后消息:', this.messages[aiMessageIndex]);
                   } else {
-                    // 如果没有AI消息，创建新消息
-                    console.log('没有找到AI消息，创建新消息');
+                    // 创建新消息
+                    console.log('创建新的AI消息');
+                    
+                    // 处理聊天内容，检测并格式化JSON代码块
+                    let processedContent = chatContent || '';
+                    if (chatContent) {
+                      // 将内容添加到当前轮次聊天内容
+                      this.currentChatContent += chatContent;
+                      
+                      // 检查是否包含JSON代码块
+                      const jsonBlockRegex = /```json[\s\S]*?```/g;
+                      let match;
+                      while ((match = jsonBlockRegex.exec(processedContent)) !== null) {
+                        const fullMatch = match[0];
+                        // 提取JSON内容
+                        const jsonContent = fullMatch.replace(/```json[\s\n]*(.*?)[\s\n]*```/s, '$1').trim();
+                        console.log('提取到的JSON内容:', jsonContent);
+                        try {
+                          // 解析并格式化JSON
+                          const parsedJson = JSON.parse(jsonContent);
+                          const formattedJson = JSON.stringify(parsedJson, null, 2);
+                          console.log('格式化后的JSON:', formattedJson);
+                          // 替换为格式化后的JSON
+                          processedContent = processedContent.replace(fullMatch, '```json\n' + formattedJson + '\n```');
+                        } catch (e) {
+                          console.error('JSON解析失败:', e);
+                        }
+                      }
+                      
+                      // 检查是否包含未闭合的JSON代码块
+                      const openJsonBlockRegex = /```json[\s\S]*$/g;
+                      const openMatch = openJsonBlockRegex.exec(processedContent);
+                      if (openMatch) {
+                        console.log('检测到未闭合的JSON代码块:', openMatch[0]);
+                      }
+                      
+                      // 检查是否包含普通JSON内容（不在代码块中）
+                      const jsonRegex = /\{[\s\S]*?\}|\[[\s\S]*?\]/g;
+                      let jsonMatch;
+                      while ((jsonMatch = jsonRegex.exec(processedContent)) !== null) {
+                        const jsonText = jsonMatch[0];
+                        try {
+                          // 尝试解析JSON
+                          const parsedJson = JSON.parse(jsonText);
+                          const formattedJson = JSON.stringify(parsedJson, null, 2);
+                          // 替换为格式化后的JSON，并用代码块包裹
+                          processedContent = processedContent.replace(jsonText, '```json\n' + formattedJson + '\n```');
+                          console.log('格式化普通JSON内容:', jsonText);
+                        } catch (e) {
+                          // 不是有效的JSON，跳过
+                        }
+                      }
+                      
+                      // 确保维度部分正确换行
+                      // 检测"维度"关键字并确保其后有换行
+                      processedContent = processedContent.replace(/(维度：|维度:)/g, '$1\n');
+                    }
+                    
                     const aiMessage = {
                       type: 'ai',
-                      content: aiResponse,
-                      time: this.formatTime(new Date())
+                      reasoning: reasoningContent || '',
+                      content: processedContent,
+                      time: this.formatTime(new Date()),
+                      id: this.currentAiMessageId || (sid || Date.now() + Math.random().toString(36).substr(2, 9)),
+                      sid: sid
                     };
                     this.messages.push(aiMessage);
                     console.log('创建新消息后列表长度:', this.messages.length);
+                    console.log('创建的新消息:', aiMessage);
+                    
+                    // 聊天内容返回时关闭加载状态
+                if (chatContent) {
+                  this.isLoading = false;
+                }
+                // 当收到完整响应时，无论是否有聊天内容，都关闭加载状态
+                if (message.header.status === 2) {
+                  this.isLoading = false;
+                }
                   }
                   this.scrollToBottom();
-                  // 关闭加载状态
-                  this.isLoading = false;
+                } else {
+                  console.error('未提取到AI响应内容');
                 }
               }
             } else if (message.type === 'ai_response') {
@@ -661,20 +859,74 @@ export default {
               const streamContent = message.content;
               console.log('收到流式输出内容:', streamContent);
               if (streamContent) {
-                // 查找最后一条AI消息
-                let lastAiMessageIndex = -1;
+                // 查找当前AI消息（使用ID匹配）
+                let currentAiMessageIndex = -1;
                 for (let i = this.messages.length - 1; i >= 0; i--) {
-                  if (this.messages[i].type === 'ai') {
-                    lastAiMessageIndex = i;
+                  if (this.messages[i].type === 'ai' && this.messages[i].id === this.currentAiMessageId) {
+                    currentAiMessageIndex = i;
                     break;
                   }
                 }
                 
-                console.log('找到最后一条AI消息索引:', lastAiMessageIndex);
+                // 如果找不到，查找最后一条AI消息作为备选
+                if (currentAiMessageIndex === -1) {
+                  for (let i = this.messages.length - 1; i >= 0; i--) {
+                    if (this.messages[i].type === 'ai') {
+                      currentAiMessageIndex = i;
+                      break;
+                    }
+                  }
+                }
                 
-                if (lastAiMessageIndex >= 0) {
-                  // 追加内容到最后一条AI消息
-                  this.messages[lastAiMessageIndex].content += streamContent;
+                console.log('找到AI消息索引:', currentAiMessageIndex);
+                
+                if (currentAiMessageIndex >= 0) {
+                  // 将内容添加到当前轮次聊天内容
+                  this.currentChatContent += streamContent;
+                  
+                  // 检测并处理JSON代码块
+                  let processedContent = streamContent;
+                  
+                  // 检查是否包含JSON代码块
+                  const jsonBlockRegex = /```json[\s\S]*?```/g;
+                  let match;
+                  while ((match = jsonBlockRegex.exec(processedContent)) !== null) {
+                    const fullMatch = match[0];
+                    // 提取JSON内容
+                    const jsonContent = fullMatch.replace(/```json[\s\n]*(.*?)[\s\n]*```/s, '$1').trim();
+                    console.log('提取到的JSON内容:', jsonContent);
+                    try {
+                      // 解析并格式化JSON
+                      const parsedJson = JSON.parse(jsonContent);
+                      const formattedJson = JSON.stringify(parsedJson, null, 2);
+                      console.log('格式化后的JSON:', formattedJson);
+                      // 替换为格式化后的JSON
+                      processedContent = processedContent.replace(fullMatch, '```json\n' + formattedJson + '\n```');
+                    } catch (e) {
+                      console.error('JSON解析失败:', e);
+                    }
+                  }
+                  
+                  // 检查是否包含普通JSON内容（不在代码块中）
+                  const jsonRegex = /\{[\s\S]*?\}|\[[\s\S]*?\]/g;
+                  let jsonMatch;
+                  while ((jsonMatch = jsonRegex.exec(processedContent)) !== null) {
+                    const jsonText = jsonMatch[0];
+                    try {
+                      // 尝试解析JSON
+                      const parsedJson = JSON.parse(jsonText);
+                      const formattedJson = JSON.stringify(parsedJson, null, 2);
+                      // 替换为格式化后的JSON，并用代码块包裹
+                      processedContent = processedContent.replace(jsonText, '```json\n' + formattedJson + '\n```');
+                      console.log('格式化普通JSON内容:', jsonText);
+                    } catch (e) {
+                      // 不是有效的JSON，跳过
+                    }
+                  }
+                  
+                  // 追加内容到当前AI消息
+                  this.messages[currentAiMessageIndex].content += processedContent;
+                  console.log('追加后内容:', this.messages[currentAiMessageIndex].content);
                   this.scrollToBottom();
                 }
                 
@@ -683,6 +935,8 @@ export default {
                   console.log('流式输出结束');
                   // 关闭加载状态
                   this.isLoading = false;
+                  // 确保滚动到底部，显示完整消息
+                  this.scrollToBottom();
                 }
               }
             } else {
@@ -745,14 +999,7 @@ export default {
         }, 2000 * this.wsReconnectAttempts); // 指数退避
       } else {
         console.error('WebSocket重连失败，已达到最大尝试次数');
-        // 添加错误消息到聊天界面
-        const errorMessage = {
-          type: 'ai',
-          content: 'AI服务连接失败，请稍后再试',
-          time: this.formatTime(new Date())
-        };
-        this.messages.push(errorMessage);
-        this.scrollToBottom();
+        // 只在控制台输出错误，不在聊天界面显示
       }
     },
     // 关闭WebSocket连接
@@ -854,6 +1101,11 @@ export default {
     
     removeBoundaryCondition(index) {
       this.scenarioForm.boundaryConditions.splice(index, 1);
+    },
+    
+    // 切换场景列表折叠状态
+    toggleScenarioList() {
+      this.isScenarioListCollapsed = !this.isScenarioListCollapsed;
     }
   },
   mounted() {
@@ -1080,6 +1332,51 @@ export default {
   font-size: 16px;
   line-height: 1.6;
   color: #333;
+  margin-top: 10px;
+  white-space: pre-wrap;
+}
+
+/* 思考内容样式 */
+.message-reasoning {
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.reasoning-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.reasoning-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  background-color: #e0e0e0;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.reasoning-content {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555;
+  font-style: italic;
+  white-space: pre-wrap;
+}
+
+/* 生成按钮容器 */
+.generate-button-container {
+  margin-top: 5px;
+  margin-bottom: 20px;
+}
+
+.generate-button-container .el-button {
+  padding: 12px 32px;
+  font-size: 16px;
 }
 
 .chat-input-area {
@@ -1183,25 +1480,86 @@ export default {
   font-family: 'Courier New', Courier, monospace;
 }
 
-/* 测试场景生成容器 */
-.scenario-generation-container {
+/* 测试场景生成包装器 */
+.scenario-generation-wrapper {
+  display: flex;
+  gap: 20px;
   height: 100%;
+  overflow: hidden;
+}
+
+/* 左侧测试场景生成容器 */
+.scenario-generation-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 30px;
-  padding: 40px;
+  gap: 8px;
+  padding: 15px;
   background-color: #ffffff;
   border: 1px solid #eaeaea;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+/* 右侧聊天容器 */
+.scenario-chat-container {
+  width: 800px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.scenario-chat-container .chat-header {
+  padding: 15px;
+  background-color: #f0f2f5;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.scenario-chat-container .chat-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.scenario-chat-container .chat-messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.scenario-chat-container .chat-input-area {
+  padding: 15px;
+  border-top: 1px solid #eaeaea;
+  background-color: #f9f9f9;
+}
+
+.scenario-chat-container .chat-input-area .el-input {
+  margin-bottom: 10px;
+}
+
+.scenario-chat-container .chat-input-area .input-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.scenario-chat-container .chat-input-area .el-button {
+  font-size: 14px;
+  padding: 6px 16px;
 }
 
 .scenario-generation-container .el-form {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .scenario-generation-container .el-form-item {
-  margin-bottom: 24px;
+  margin-bottom: 10px;
 }
 
 .scenario-generation-container .el-textarea {
@@ -1209,37 +1567,47 @@ export default {
 }
 
 .scenario-generation-container .el-textarea__inner {
-  font-size: 16px;
-  line-height: 1.6;
-  min-height: 120px;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100px;
 }
 
 /* 用户故事卡片样式 */
 .user-story-card {
-  padding: 20px;
+  padding: 15px;
   border: 1px solid #eaeaea;
   border-radius: 8px;
   background-color: #f9f9f9;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
 .user-story-item {
   display: flex;
   align-items: center;
-  margin-bottom: 15px;
-}
-
-.user-story-item:last-child {
-  margin-bottom: 0;
+  flex: 1;
+  min-width: 200px;
 }
 
 .user-story-item .label {
   font-weight: 600;
   color: #666;
   min-width: 60px;
+  font-size: 14px;
+  margin-right: 10px;
 }
 
 .user-story-item .el-input {
   flex: 1;
+  min-width: 150px;
+}
+
+.user-story-item .el-input__inner {
+  font-size: 14px;
+  padding: 8px 12px;
 }
 
 /* 测试维度样式 */
@@ -1326,11 +1694,64 @@ export default {
   background: #a8a8a8;
 }
 
+/* 场景列表容器样式 */
+.scenario-list-container {
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+
+.scenario-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background-color: #f0f2f5;
+  cursor: pointer;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.scenario-list-header span {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.header-actions .el-button {
+  font-size: 12px;
+  padding: 4px 12px;
+}
+
+.scenario-list-content {
+  padding: 15px;
+  background-color: #ffffff;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.scenario-list-content .el-table {
+  margin: 0;
+}
+
 /* 场景列表卡片样式 */
 .scenario-list-card {
   border: 1px solid #eaeaea;
   border-radius: 8px;
   background-color: #f9f9f9;
+  margin-bottom: 15px !important;
+  box-shadow: none;
+}
+
+.scenario-list-card .el-card__body {
+  padding: 15px;
+  border-top: none;
 }
 
 .scenario-list-card .card-header {
@@ -1344,6 +1765,8 @@ export default {
 
 .scenario-list-content {
   padding: 10px 0;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 /* 示例卡片样式 */
