@@ -4,8 +4,10 @@
     <div class="header">
       <h1>用例列表</h1>
       <div>
+        <span v-if="selectedCases.length > 0" class="selected-count">已选择 {{ selectedCases.length }} 个用例</span>
         <el-button type="primary" @click="openDialog">新增测试用例</el-button>
         <el-button type="success" @click="refreshList">刷新</el-button>
+        <el-button type="danger" @click="confirmBatchDelete" :disabled="selectedCases.length === 0">批量删除</el-button>
       </div>
     </div>
 
@@ -79,7 +81,8 @@
         </div>
         
         <!-- 表格 -->
-        <el-table :data="caseList.records" style="width: 100%">
+        <el-table :data="caseList.records" style="width: 100%" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="55" />
           <el-table-column prop="caseNumber" label="用例编号" width="160" />
           <el-table-column prop="title" label="标题" width="200" />
           <el-table-column prop="description" label="描述" />
@@ -288,6 +291,58 @@
         <el-button type="primary" @click="saveFolder">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- 批量编辑对话框 -->
+    <el-dialog title="批量编辑测试用例" v-model="batchEditDialogVisible" width="50%">
+      <div class="batch-edit-info">
+        <span>当前正在编辑 {{ selectedCases.length }} 个测试用例</span>
+      </div>
+      <el-form :model="batchEditForm" label-width="120px">
+        <el-form-item label="标题">
+          <el-input v-model="batchEditForm.title" placeholder="请输入标题" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="batchEditForm.description" type="textarea" placeholder="请输入描述" />
+        </el-form-item>
+        <el-form-item label="优先级">
+          <el-select v-model="batchEditForm.priority" placeholder="请选择优先级">
+            <el-option label="1" :value="1" />
+            <el-option label="2" :value="2" />
+            <el-option label="3" :value="3" />
+            <el-option label="4" :value="4" />
+            <el-option label="5" :value="5" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="batchEditForm.status" placeholder="请选择状态">
+            <el-option label="未执行" :value="0" />
+            <el-option label="已完成" :value="1" />
+            <el-option label="已失败" :value="2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="模块">
+          <el-input v-model="batchEditForm.module" placeholder="请输入模块" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="batchEditForm.remark" type="textarea" placeholder="请输入备注" />
+        </el-form-item>
+        <el-form-item label="所属文件夹">
+          <el-select v-model="batchEditForm.folderId" placeholder="请选择文件夹">
+            <el-option label="根目录" :value="0" />
+            <el-option
+              v-for="folder in allFolders"
+              :key="folder.id"
+              :label="folder.name"
+              :value="folder.id"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="batchEditDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveBatchEdit">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -302,7 +357,7 @@ export default {
     Edit
   },
   data() {
-    return {
+    const data = {
       caseList: {
         records: [], // 当前页的数据
         pageNumber: 0, // 当前页码
@@ -374,6 +429,19 @@ export default {
       },
       userList: [] // 用户列表，用于创建人选择
     };
+    // 批量编辑相关数据
+    data.selectedCases = []; // 选中的测试用例
+    data.batchEditDialogVisible = false; // 批量编辑对话框显示状态
+    data.batchEditForm = {
+      title: '',
+      description: '',
+      priority: '',
+      status: '',
+      module: '',
+      remark: '',
+      folderId: ''
+    }; // 批量编辑表单数据
+    return data;
   },
   methods: {
     // 打开新增对话框
@@ -1131,6 +1199,62 @@ export default {
           return '未知';
       }
     },
+
+    // 处理选择变化
+    handleSelectionChange(selection) {
+      this.selectedCases = selection;
+    },
+
+    // 打开批量编辑对话框
+    openBatchEditDialog() {
+      // 重置批量编辑表单
+      this.batchEditForm = {
+        title: '',
+        description: '',
+        priority: '',
+        status: '',
+        module: '',
+        remark: '',
+        folderId: ''
+      };
+      // 打开对话框
+      this.batchEditDialogVisible = true;
+    },
+
+    // 确认批量删除
+    confirmBatchDelete() {
+      this.$confirm('确定要删除选中的 ' + this.selectedCases.length + ' 个测试用例吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.batchDelete();
+      }).catch(() => {
+        this.$message.info('已取消删除');
+      });
+    },
+
+    // 批量删除
+    async batchDelete() {
+      try {
+        // 获取选中用例的ID列表
+        const caseIds = this.selectedCases.map(caseItem => caseItem.id);
+
+        // 调用批量删除接口
+        const response = await this.$http.delete('/api/cases/batchRemove', {
+          data: caseIds
+        });
+
+        if (response.data.code === 0) {
+          this.$message.success('批量删除成功');
+          this.fetchCaseList(); // 重新加载用例列表
+        } else {
+          this.$message.error('批量删除失败：' + response.data.message);
+        }
+      } catch (error) {
+        this.$message.error('请求失败：' + error.message);
+      }
+    },
   },
   mounted() {
     this.getFolderTree(); // 获取文件夹树数据
@@ -1167,6 +1291,26 @@ h1 {
 .header > div {
   display: flex;
   gap: 12px; /* 按钮之间的间距 */
+  align-items: center;
+}
+
+/* 选中计数样式 */
+.selected-count {
+  font-size: 14px;
+  color: #409eff;
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+/* 批量编辑信息样式 */
+.batch-edit-info {
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: #f0f9ff;
+  border-left: 4px solid #409eff;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
 }
 
 /* 主内容区域 */
