@@ -97,7 +97,9 @@ console.error = function(...args) {
 
 const app = createApp(App);
 app.use(ElementPlus);
-app.use(router).mount('#app');
+app.use(router);
 
 // 将配置好的 axios 实例注册为全局属性
 app.config.globalProperties.$http = service;
+
+app.mount('#app');

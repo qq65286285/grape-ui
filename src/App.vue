@@ -22,7 +22,7 @@
         <span>用例列表</span>
       </el-menu-item>
       <el-menu-item index="/ExcutionCase">
-        <span>用例执行1</span>
+        <span>测试计划</span>
       </el-menu-item>
       <el-menu-item index="/FilePage">
         <span>文件管理</span>

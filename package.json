@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dev": "vite --port 8309 --host 0.0.0.0 --debug",
+    "build": "vite build",
+    "preview": "vite preview",
     "serve": "vue-cli-service serve --mode test",
     "serve:test": "vue-cli-service serve --mode test",
     "serve:prod": "vue-cli-service serve --mode prod",
-    "build": "vue-cli-service build --mode test",
     "build:test": "vue-cli-service build --mode test",
     "build:prod": "vue-cli-service build --mode prod",
     "lint": "vue-cli-service lint"
@@ -25,11 +27,13 @@
   "devDependencies": {
     "@babel/core": "^7.12.16",
     "@babel/eslint-parser": "^7.12.16",
+    "@vitejs/plugin-vue": "^6.0.5",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
     "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^8.0.3"
+    "eslint-plugin-vue": "^8.0.3",
+    "vite": "^8.0.0"
   },
   "eslintConfig": {
     "root": true,
