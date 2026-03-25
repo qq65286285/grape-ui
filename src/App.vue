@@ -36,6 +36,9 @@
       <el-menu-item index="/ai-chat">
         <span>AI</span>
       </el-menu-item>
+      <el-menu-item index="/my-tasks">
+        <span>我的任务</span>
+      </el-menu-item>
     </el-menu>
 
     <!-- 内容区域 -->

@@ -9,6 +9,9 @@ import LoginPage from '@/view/LoginPage.vue';
 import ScreenMirror from '@/view/ScreenMirror.vue';
 import TestCaseFolderTree from '@/view/TestCaseFolderTree.vue';
 import AIChat from '@/view/AIChat.vue';
+import MyTasks from '@/view/MyTasks.vue';
+import MyTestCases from '@/view/MyTestCases.vue';
+import TestCaseExecution from '@/view/TestCaseExecution.vue';
 
 const routes = [
   {
@@ -65,10 +68,28 @@ const routes = [
     component: AIChat,
     meta: { requiresAuth: true }, // 添加需要认证的标识
   },
-  // 添加默认路径重定向到登录页
+  {
+    path: '/my-tasks',
+    name: 'MyTasks',
+    component: MyTasks,
+    meta: { requiresAuth: true }, // 添加需要认证的标识
+  },
+  {
+    path: '/my-test-cases',
+    name: 'MyTestCases',
+    component: MyTestCases,
+    meta: { requiresAuth: true }, // 添加需要认证的标识
+  },
+  {
+    path: '/test-case-execution',
+    name: 'TestCaseExecution',
+    component: TestCaseExecution,
+    meta: { requiresAuth: true }, // 添加需要认证的标识
+  },
+  // 添加默认路径重定向到我的任务页面
   {
     path: '/',
-    redirect: '/LoginPage'
+    redirect: '/my-tasks'
   }
 ];
 

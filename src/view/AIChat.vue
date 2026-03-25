@@ -950,7 +950,9 @@ export default {
         // 连接关闭
         this.ws.onclose = (event) => {
           console.log('WebSocket连接关闭:', event.code, event.reason);
-          console.log('WebSocket readyState:', this.ws.readyState);
+          if (this.ws) {
+            console.log('WebSocket readyState:', this.ws.readyState);
+          }
           this.wsConnected = false;
           console.log('WebSocket连接状态:', this.wsConnected);
           

@@ -6,7 +6,18 @@ import path from 'path'
 export default defineConfig({
   plugins: [vue()],
   server: {
-    port: 8309
+    port: 8309,
+    strictPort: true,
+    overlay: {
+      warnings: true,
+      errors: (err) => {
+        // 忽略 ResizeObserver 循环错误
+        if (err.message && err.message.includes('ResizeObserver loop completed with undelivered notifications')) {
+          return false;
+        }
+        return true;
+      }
+    }
   },
   resolve: {
     alias: {
