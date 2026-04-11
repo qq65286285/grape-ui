@@ -86,7 +86,13 @@
           <el-table-column prop="caseNumber" label="用例编号" width="160" />
           <el-table-column prop="title" label="标题" width="200" />
           <el-table-column prop="description" label="描述" />
-          <el-table-column prop="priority" label="优先级" width="80" />
+          <el-table-column prop="priority" label="优先级" width="80">
+            <template #default="scope">
+              <el-tag :type="getPriorityType(scope.row.priority)">
+                {{ getPriorityText(scope.row.priority) }}
+              </el-tag>
+            </template>
+          </el-table-column>
           <el-table-column label="创建人" width="120">
             <template #default="scope">
               {{ scope.row.username || '加载中...' }}
@@ -118,9 +124,6 @@
     <!-- 对话框 -->
     <el-dialog :title="dialogTitle" v-model="dialogVisible" width="50%">
       <el-form :model="form" label-width="120px">
-        <el-form-item label="用例编号">
-          <el-input v-model="form.caseNumber" />
-        </el-form-item>
         <el-form-item label="标题">
           <el-input v-model="form.title" />
         </el-form-item>
@@ -129,11 +132,9 @@
         </el-form-item>
         <el-form-item label="优先级">
           <el-radio-group v-model="form.priority">
-            <el-radio :label="1">1</el-radio>
-            <el-radio :label="2">2</el-radio>
-            <el-radio :label="3">3</el-radio>
-            <el-radio :label="4">4</el-radio>
-            <el-radio :label="5">5</el-radio>
+            <el-radio :label="1">低</el-radio>
+            <el-radio :label="2">中</el-radio>
+            <el-radio :label="3">高</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="步骤和预期结果">
@@ -306,11 +307,9 @@
         </el-form-item>
         <el-form-item label="优先级">
           <el-select v-model="batchEditForm.priority" placeholder="请选择优先级">
-            <el-option label="1" :value="1" />
-            <el-option label="2" :value="2" />
-            <el-option label="3" :value="3" />
-            <el-option label="4" :value="4" />
-            <el-option label="5" :value="5" />
+            <el-option label="低" :value="1" />
+            <el-option label="中" :value="2" />
+            <el-option label="高" :value="3" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
@@ -374,7 +373,6 @@ export default {
       dialogTitle: "新增测试用例", // 对话框标题
       form: {
         id: 0,
-        caseNumber: "",
         title: "",
         description: "",
         priority: 1,
@@ -714,7 +712,6 @@ export default {
           
           this.form = {
             id: caseData.id,
-            caseNumber: caseData.caseNumber,
             title: caseData.title,
             description: caseData.description,
             priority: caseData.priority,
@@ -1038,7 +1035,6 @@ export default {
     resetForm() {
       this.form = {
         id: 0,
-        caseNumber: "",
         title: "",
         description: "",
         priority: 1,
@@ -1255,6 +1251,26 @@ export default {
         }
       } catch (error) {
         this.$message.error('请求失败：' + error.message);
+      }
+    },
+    
+    // 获取优先级类型
+    getPriorityType(priority) {
+      switch (priority) {
+        case 1: return 'info';
+        case 2: return 'warning';
+        case 3: return 'danger';
+        default: return '';
+      }
+    },
+    
+    // 获取优先级文本
+    getPriorityText(priority) {
+      switch (priority) {
+        case 1: return '低';
+        case 2: return '中';
+        case 3: return '高';
+        default: return '未知';
       }
     },
   },

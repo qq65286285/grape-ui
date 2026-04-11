@@ -27,15 +27,18 @@
       <el-menu-item index="/FilePage">
         <span>文件管理</span>
       </el-menu-item>
-       <el-menu-item index="/PhoneManage">
+      <!-- 手机管理 -->
+      <!-- <el-menu-item index="/PhoneManage">
         <span>手机管理</span>
-      </el-menu-item>
-       <el-menu-item index="/CloundPhone">
+      </el-menu-item> -->
+      <!-- 云真机 -->
+      <!-- <el-menu-item index="/CloundPhone">
         <span>云真机</span>
-      </el-menu-item>
-      <el-menu-item index="/ai-chat">
+      </el-menu-item> -->
+      <!-- AI -->
+      <!-- <el-menu-item index="/ai-chat">
         <span>AI</span>
-      </el-menu-item>
+      </el-menu-item> -->
       <el-menu-item index="/my-tasks">
         <span>我的任务</span>
       </el-menu-item>

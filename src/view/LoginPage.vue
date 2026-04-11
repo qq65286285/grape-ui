@@ -271,8 +271,8 @@ export default {
               localStorage.setItem('username', response.data.username);
               
               this.$message.success('登录成功');
-              // 跳转到首页或其他页面
-              this.$router.push('/CloundPhone');
+              // 跳转到我的任务页面
+              this.$router.push('/my-tasks');
             }
           } catch (error) {
             this.$message.error(error.message || '登录失败');

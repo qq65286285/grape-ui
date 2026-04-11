@@ -112,9 +112,10 @@ router.beforeEach((to, from, next) => {
   
   // 检查目标路由是否是登录页
   if (to.path === '/LoginPage') {
-    // 如果已登录，重定向到云真机页面
+    // 如果已登录，保持当前路径不变
     if (token) {
-      next('/CloundPhone');
+      // 不进行重定向，保持当前路径
+      next();
     } else {
       // 未登录，允许访问登录页
       next();
@@ -131,6 +132,17 @@ router.beforeEach((to, from, next) => {
     }
   } else {
     // 不需要认证的路由，直接访问
+    next();
+  }
+});
+
+// 处理hash模式下的URL解析
+router.beforeResolve((to, from, next) => {
+  // 检查是否是从登录页跳转过来的，并且目标路径是云真机页面
+  if (from.path === '/LoginPage' && to.path === '/CloundPhone') {
+    // 阻止跳转到云真机页面，重定向到我的任务页面
+    next('/my-tasks');
+  } else {
     next();
   }
 });

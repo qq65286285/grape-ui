@@ -127,85 +127,106 @@
       <el-dialog
         v-model="dialogVisible"
         title="新建测试计划"
-        width="50%"
+        width="60%"
+        center
       >
-        <el-form :model="createForm" :rules="createRules" ref="createFormRef" label-width="120px">
-          <el-form-item label="计划编号" prop="planNo">
-            <el-input v-model="createForm.planNo" placeholder="请输入计划编号" />
-          </el-form-item>
-          <el-form-item label="计划名称" prop="planName">
-            <el-input v-model="createForm.planName" placeholder="请输入计划名称" />
-          </el-form-item>
-          <el-form-item label="计划类型" prop="planType">
-            <el-select v-model="createForm.planType" placeholder="请选择计划类型">
-              <el-option label="项目测试" value="1" />
-              <el-option label="迭代测试" value="2" />
-              <el-option label="专项测试" value="3" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="项目ID" prop="projectId">
-            <el-input v-model.number="createForm.projectId" placeholder="请输入项目ID" />
-          </el-form-item>
-          <el-form-item label="迭代ID" prop="iterationId">
-            <el-input v-model.number="createForm.iterationId" placeholder="请输入迭代ID" />
-          </el-form-item>
-          <el-form-item label="状态" prop="status">
-            <el-select v-model="createForm.status" placeholder="请选择状态">
-              <el-option label="未开始" value="1" />
-              <el-option label="进行中" value="2" />
-              <el-option label="已完成" value="3" />
-              <el-option label="已暂停" value="4" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="负责人" prop="ownerId">
-            <el-select v-model="createForm.ownerId" placeholder="请选择负责人">
-              <el-option 
-                v-for="user in users" 
-                :key="user.id" 
-                :label="user.nickname || user.username" 
-                :value="user.id" 
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="计划开始时间" prop="planStartDate">
-            <el-date-picker 
-              v-model="createForm.planStartDate" 
-              type="date" 
-              placeholder="请选择计划开始时间" 
-              style="width: 100%" 
-              value-format="YYYY-MM-DD"
-            />
-          </el-form-item>
-          <el-form-item label="计划结束时间" prop="planEndDate">
-            <el-date-picker 
-              v-model="createForm.planEndDate" 
-              type="date" 
-              placeholder="请选择计划结束时间" 
-              style="width: 100%" 
-              value-format="YYYY-MM-DD"
-            />
-          </el-form-item>
-
-          <el-form-item label="计划描述" prop="description">
-            <el-input v-model="createForm.description" placeholder="请输入计划描述" type="textarea" />
-          </el-form-item>
-          <el-form-item label="测试范围" prop="testScope">
-            <el-input v-model="createForm.testScope" placeholder="请输入测试范围" type="textarea" />
-          </el-form-item>
-          <el-form-item label="测试目标" prop="testTarget">
-            <el-input v-model="createForm.testTarget" placeholder="请输入测试目标" type="textarea" />
-          </el-form-item>
-          <el-form-item label="测试策略" prop="testStrategy">
-            <el-input v-model="createForm.testStrategy" placeholder="请输入测试策略" type="textarea" />
-          </el-form-item>
-          <el-form-item label="验收标准" prop="acceptanceCriteria">
-            <el-input v-model="createForm.acceptanceCriteria" placeholder="请输入验收标准" type="textarea" />
-          </el-form-item>
+        <el-form :model="createForm" :rules="createRules" ref="createFormRef" label-width="140px" class="create-plan-form">
+          <!-- 基本信息 -->
+          <div class="form-section">
+            <h3 class="section-title">基本信息</h3>
+            <div class="form-row">
+              <el-form-item label="计划编号" prop="planNo" class="form-item-half">
+                <el-input v-model="createForm.planNo" placeholder="请输入计划编号" size="large" />
+              </el-form-item>
+              <el-form-item label="计划名称" prop="planName" class="form-item-half">
+                <el-input v-model="createForm.planName" placeholder="请输入计划名称" size="large" />
+              </el-form-item>
+            </div>
+            <div class="form-row">
+              <el-form-item label="计划类型" prop="planType" class="form-item-half">
+                <el-select v-model="createForm.planType" placeholder="请选择计划类型" size="large">
+                  <el-option label="项目测试" value="1" />
+                  <el-option label="迭代测试" value="2" />
+                  <el-option label="专项测试" value="3" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="状态" prop="status" class="form-item-half">
+                <el-select v-model="createForm.status" placeholder="请选择状态" size="large">
+                  <el-option label="未开始" value="1" />
+                  <el-option label="进行中" value="2" />
+                  <el-option label="已完成" value="3" />
+                  <el-option label="已暂停" value="4" />
+                </el-select>
+              </el-form-item>
+            </div>
+            <div class="form-row">
+              <el-form-item label="项目ID" prop="projectId" class="form-item-half">
+                <el-input v-model.number="createForm.projectId" placeholder="请输入项目ID" size="large" />
+              </el-form-item>
+              <el-form-item label="迭代ID" prop="iterationId" class="form-item-half">
+                <el-input v-model.number="createForm.iterationId" placeholder="请输入迭代ID" size="large" />
+              </el-form-item>
+            </div>
+            <div class="form-row">
+              <el-form-item label="负责人" prop="ownerId" class="form-item-half">
+                <el-select v-model="createForm.ownerId" placeholder="请选择负责人" size="large">
+                  <el-option 
+                    v-for="user in users" 
+                    :key="user.id" 
+                    :label="user.nickname || user.username" 
+                    :value="user.id" 
+                  />
+                </el-select>
+              </el-form-item>
+            </div>
+            <div class="form-row">
+              <el-form-item label="计划开始时间" prop="planStartDate" class="form-item-half">
+                <el-date-picker 
+                  v-model="createForm.planStartDate" 
+                  type="date" 
+                  placeholder="请选择计划开始时间" 
+                  style="width: 100%" 
+                  value-format="YYYY-MM-DD"
+                  size="large"
+                />
+              </el-form-item>
+              <el-form-item label="计划结束时间" prop="planEndDate" class="form-item-half">
+                <el-date-picker 
+                  v-model="createForm.planEndDate" 
+                  type="date" 
+                  placeholder="请选择计划结束时间" 
+                  style="width: 100%" 
+                  value-format="YYYY-MM-DD"
+                  size="large"
+                />
+              </el-form-item>
+            </div>
+          </div>
+          
+          <!-- 详细信息 -->
+          <div class="form-section">
+            <h3 class="section-title">详细信息</h3>
+            <el-form-item label="计划描述" prop="description">
+              <el-input v-model="createForm.description" placeholder="请输入计划描述" type="textarea" rows="3" size="large" />
+            </el-form-item>
+            <el-form-item label="测试范围" prop="testScope">
+              <el-input v-model="createForm.testScope" placeholder="请输入测试范围" type="textarea" rows="3" size="large" />
+            </el-form-item>
+            <el-form-item label="测试目标" prop="testTarget">
+              <el-input v-model="createForm.testTarget" placeholder="请输入测试目标" type="textarea" rows="3" size="large" />
+            </el-form-item>
+            <el-form-item label="测试策略" prop="testStrategy">
+              <el-input v-model="createForm.testStrategy" placeholder="请输入测试策略" type="textarea" rows="3" size="large" />
+            </el-form-item>
+            <el-form-item label="验收标准" prop="acceptanceCriteria">
+              <el-input v-model="createForm.acceptanceCriteria" placeholder="请输入验收标准" type="textarea" rows="3" size="large" />
+            </el-form-item>
+          </div>
         </el-form>
         <template #footer>
           <span class="dialog-footer">
-            <el-button @click="dialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="submitForm">确定</el-button>
+            <el-button size="large" @click="dialogVisible = false">取消</el-button>
+            <el-button type="primary" size="large" @click="submitForm">确定</el-button>
           </span>
         </template>
       </el-dialog>
@@ -1719,6 +1740,50 @@ export default {
   box-shadow: 0 2px 8px rgba(245, 108, 108, 0.4);
 }
 
+/* 新建测试计划表单样式 */
+.create-plan-form {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* 表单分区 */
+.form-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #f9fafc;
+  border-radius: 12px;
+  border: 1px solid #e6e8eb;
+  transition: all 0.3s ease;
+}
+
+.form-section:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 分区标题 */
+.section-title {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #409eff;
+}
+
+/* 表单行 */
+.form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* 半宽表单项 */
+.form-item-half {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
 /* 表单样式 */
 :deep(.el-form-item) {
   margin-bottom: 20px;
@@ -1727,14 +1792,79 @@ export default {
 :deep(.el-form-item__label) {
   font-weight: 500;
   color: #303133;
+  font-size: 14px;
 }
 
 :deep(.el-input__inner),
-:deep(.el-select__input) {
+:deep(.el-select__input),
+:deep(.el-date-picker__input) {
   border-radius: 6px;
   height: 40px;
   border: 1px solid #dcdfe6;
   transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+:deep(.el-input__inner:hover),
+:deep(.el-select__input:hover),
+:deep(.el-date-picker__input:hover) {
+  border-color: #c0c4cc;
+}
+
+:deep(.el-input__inner:focus),
+:deep(.el-select__input:focus),
+:deep(.el-date-picker__input:focus) {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+/* 文本域样式 */
+:deep(.el-textarea__inner) {
+  border-radius: 6px;
+  border: 1px solid #dcdfe6;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  resize: vertical;
+}
+
+:deep(.el-textarea__inner:hover) {
+  border-color: #c0c4cc;
+}
+
+:deep(.el-textarea__inner:focus) {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+/* 滚动条样式 */
+.create-plan-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.create-plan-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.create-plan-form::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.create-plan-form::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 大尺寸组件样式 */
+:deep(.el-input--large .el-input__inner),
+:deep(.el-select--large .el-select__input),
+:deep(.el-date-picker--large .el-date-picker__input) {
+  height: 44px;
+  font-size: 15px;
+}
+
+:deep(.el-textarea--large .el-textarea__inner) {
+  font-size: 15px;
 }
 
 :deep(.el-input__inner:focus),
